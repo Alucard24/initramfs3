@@ -321,6 +321,8 @@ SYSTEM_GOVERNOR=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`
 
 if [ $MORE_BATTERY == 1 ]; then
 
+	echo "100000" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq;
+
 	if [ $SYSTEM_GOVERNOR == "ondemand" ]; then
 		echo "95" > /sys/devices/system/cpu/cpufreq/ondemand/up_threshold;
 		echo "1" > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor;
@@ -658,6 +660,7 @@ AWAKE_MODE()
 {
 
 # Awake booster!
+<<<<<<< HEAD
 # Kill the wakeup bug! boost the CPU to MAX allowed.
 echo "performance" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor;
 
@@ -666,10 +669,23 @@ echo "1200000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq > /dev/nu
 echo "1500000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq > /dev/null 2>&1;
 
 # Now boost the screen lock freq to Max Allowed
+=======
+# kill the wakeup bug! boost the CPU to MAX allowed
+echo "performance" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor;
+
+>>>>>>> FETCH_HEAD
 echo "1000000" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq;
 echo "1200000" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq > /dev/null 2>&1;
 echo "1500000" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq > /dev/null 2>&1;
 
+<<<<<<< HEAD
+=======
+# now boost the screen lock freq to Max allowed
+echo "1000000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+echo "1200000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq > /dev/null 2>&1;
+echo "1500000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq > /dev/null 2>&1;
+
+>>>>>>> FETCH_HEAD
 sleep 5
 
 # charging & screen is on
@@ -701,6 +717,7 @@ else
 	else
 		echo "off" > /sys/devices/virtual/misc/second_core/hotplug_on;
 	fi;
+<<<<<<< HEAD
 
 	if [ "$secondcore" == "always-off" ]; then
 		echo "off" > /sys/devices/virtual/misc/second_core/hotplug_on;
@@ -709,6 +726,14 @@ else
 
 	if [ "$secondcore" == "always-on" ]; then
 		echo "off" > /sys/devices/virtual/misc/second_core/hotplug_on;
+=======
+
+	if [ "$secondcore" == "always-off" ]; then	
+		echo "off" > /sys/devices/virtual/misc/second_core/second_core_on;
+	fi;
+
+	if [ "$secondcore" == "always-on" ]; then	
+>>>>>>> FETCH_HEAD
 		echo "on" > /sys/devices/virtual/misc/second_core/second_core_on;
 	fi;
 
@@ -735,7 +760,11 @@ echo "${scaling_governor}" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_govern
 echo "${scaling_min_freq}" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 echo "${scaling_max_freq}" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 
+<<<<<<< HEAD
 echo "${scaling_max_freq}" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq
+=======
+echo "${scaling_max_freq}" > /sys/devices/virtual/sec/sec_touchscreen/tsp_touch_freq;
+>>>>>>> FETCH_HEAD
 
 # Restore Smooth Level
 kmemhelper -n smooth_level -o 0 -t int ${smooth_level0}
@@ -744,10 +773,7 @@ if [ $cortexbrain_battery == 1 ]; then
 	BATTERY_TWEAKS;
 fi;
 
-# ==============================================================
 # check for temperature
-# ==============================================================
-
 CHECK_TEMPERATURE()
 {
 TEMP=`cat /sys/class/power_supply/battery/batt_temp`;
@@ -758,23 +784,6 @@ if [ $TEMP -ge $MAX_TEMP ]; then
 fi;
 }
 CHECK_TEMPERATURE;
-
-if [ $cortexbrain_cpu == 1 ]; then
-	if [[ "$PROFILE" == "performance" ]]; then
-		MORE_SPEED=1;
-		MORE_BATTERY=0;
-		DEFAULT_SPEED=0;
-	elif [[ "$PROFILE" == "default" ]]; then
-		MORE_BATTERY=0;
-		DEFAULT_SPEED=1;
-		MORE_SPEED=0;
-	else
-		MORE_BATTERY=1;
-		MORE_SPEED=0;
-		DEFAULT_SPEED=0;
-	fi;
-	CPU_GOV_TWEAKS;
-fi;
 
 # Setting the vibrator force in case it's has been reseted.
 echo "${pwm_val}" > /sys/vibrator/pwm_val;
@@ -827,13 +836,6 @@ if [ $cortexbrain_battery == 1 ]; then
 	BATTERY_TWEAKS;
 fi;
 
-if [ $cortexbrain_cpu == 1 ]; then
-	MORE_BATTERY=1;
-	MORE_SPEED=0;
-	DEFAULT_SPEED=0;
-	CPU_GOV_TWEAKS;
-fi;
-
 # CPU Idle State - AFTR+LPA
 echo "3" > /sys/module/cpuidle_exynos4/parameters/enable_mask;
 
@@ -847,56 +849,17 @@ log -p i -t $FILE_NAME "*** $MODE mode ***";
 }
 
 # ==============================================================
-# ExTweaks Push functions.
-# ==============================================================
-
-# On Boot, delete auto created requests for action by extweaks start.
-if [ -e /data/.siyah/bln_test ]; then
-	rm -f /data/.siyah/bln_test
-fi;
-
-if [ -e /data/.siyah/fixperm ]; then
-	rm -f /data/.siyah/fixperm
-fi;
-
-if [ -e /data/.siyah/fuel_gauge_reset ]; then
-	rm -f /data/.siyah/fuel_gauge_reset
-fi;
-
-EXTWEAKSPUSH ()
-{
-	# Case if GM BLN active in kernel.
-	if [ -e /sys/class/misc/notification/led ] && [ -e /data/.siyah/bln_test ]; then
-		echo 1 > /sys/class/misc/notification/led;
-		rm -f /data/.siyah/bln_test;
-	fi;
-	# Case if Myfluxi BLN active in kernel.
-	if [ -e /sys/class/misc/backlightnotification/notification_led ] && [ -e /data/.siyah/bln_test ]; then
-		echo 1 > /sys/class/misc/backlightnotification/notification_led;
-		rm -f /data/.siyah/bln_test;
-	fi;
-	if [ -e /data/.siyah/fixperm ]; then
-		/sbin/fix_permissions;
-		rm -f /data/.siyah/fixperm;
-	fi;
-	# In case user made reset Fuel Gauge Reset request.
-	if [ -e /data/.siyah/fuel_gauge_reset ]; then
-		echo "1" > /sys/devices/platform/i2c-gpio.9/i2c-9/9-0036/power_supply/fuelgauge/fg_reset_soc
-		rm -f /data/.siyah/fuel_gauge_reset;
-	fi;
-}
-
-# ==============================================================
 # Background process to check screen state
 # ==============================================================
 if [ $cortexbrain_background_process == 1 ]; then
 
+	PIDOFCORTEX=`pgrep -f "/sbin/busybox sh /sbin/ext/cortexbrain-tune.sh"`;	
+	/system/xbin/echo "-17" > /proc/${PIDOFCORTEX}/oom_adj;
+	renice -10 ${PIDOFCORTEX};
+
 	(while [ 1 ]; do
 		# AWAKE State! all system ON!
 		STATE=$(cat /sys/power/wait_for_fb_wake);
-		PIDOFCORTEX=`pgrep -f "/sbin/busybox sh /sbin/ext/cortexbrain-tune.sh"`;	
-		/system/xbin/echo "-17" > /proc/${PIDOFCORTEX}/oom_adj;
-		renice -10 ${PIDOFCORTEX};
 		PROFILE=$(cat /data/.siyah/.active.profile);
 		. /data/.siyah/$PROFILE.profile;
 		AWAKE_MODE;
@@ -904,12 +867,12 @@ if [ $cortexbrain_background_process == 1 ]; then
 
 		# SLEEP state! All system to power save!
 		STATE=$(cat /sys/power/wait_for_fb_sleep);
-		PROFILE=$(cat /data/.siyah/.active.profile);
-		. /data/.siyah/$PROFILE.profile;
-		EXTWEAKSPUSH;
 		SLEEP_MODE;
 		sleep 3;
 	done &);
+
+else
+	exit;
 fi;
 
 # ==============================================================
