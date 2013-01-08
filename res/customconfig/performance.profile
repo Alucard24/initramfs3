@@ -33,8 +33,8 @@ CPUVOLT10=975
 CPUVOLT11=950
 CPUVOLT12=925
 up_threshold_at_min_freq=40
-up_threshold=85
-down_threshold=40
+up_threshold=60
+down_threshold=20
 inc_cpu_load_at_min_freq=40
 inc_cpu_load=80
 dec_cpu_load=60
@@ -53,7 +53,11 @@ hotplug_freq_2_0=200000
 hotplug_rq_1_1=100
 hotplug_rq_2_0=100
 hotplug_compare_level=0
+<<<<<<< HEAD
 freq_step=20
+=======
+freq_step=35
+>>>>>>> upstream/master
 freq_step_dec=5
 freq_up_brake=5
 down_differential=5
@@ -62,12 +66,17 @@ pump_down_step=1
 freq_for_responsiveness=400000
 screen_off_min_step=11
 hispeed_freq=1200000
-up_threshold_at_min_freq_sleep=85
-up_threshold_sleep=85
-down_threshold_sleep=60
+up_threshold_at_min_freq_sleep=70
+up_threshold_sleep=70
+down_threshold_sleep=30
 inc_cpu_load_at_min_freq_sleep=60
+<<<<<<< HEAD
 inc_cpu_load_sleep=90
 dec_cpu_load_sleep=90
+=======
+inc_cpu_load_sleep=80
+dec_cpu_load_sleep=80
+>>>>>>> upstream/master
 up_avg_load_sleep=65
 down_avg_load_sleep=30
 cpu_up_rate_sleep=20
@@ -83,7 +92,11 @@ hotplug_freq_2_0_sleep=200000
 hotplug_rq_1_1_sleep=100
 hotplug_rq_2_0_sleep=100
 hotplug_compare_level_sleep=0
+<<<<<<< HEAD
 freq_step_sleep=10
+=======
+freq_step_sleep=30
+>>>>>>> upstream/master
 freq_step_dec_sleep=10
 freq_up_brake_sleep=10
 down_differential_sleep=5
@@ -170,7 +183,9 @@ chargecurrent2=700
 chargecurrent3=500
 install_root=on
 cortexbrain_background_process=1
-cortexbrain_auto_tweak_brightness=off
+cortexbrain_auto_sync_brightness=off
+cortexbrain_auto_less_brightness=off
+cortexbrain_less_brightness=0
 cortexbrain_auto_tweak_wifi=off
 cortexbrain_auto_tweak_wifi_sleep_delay=30
 wifi_pwr=off
@@ -184,3 +199,4 @@ cortexbrain_battery=on
 cortexbrain_system=on
 cortexbrain_kernel_tweaks=on
 cortexbrain_io=on
+cortexbrain_read_ahead_kb=2048
