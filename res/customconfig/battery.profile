@@ -53,7 +53,15 @@ hotplug_freq_2_0=200000
 hotplug_rq_1_1=100
 hotplug_rq_2_0=100
 hotplug_compare_level=0
+<<<<<<< HEAD
 freq_step=30
+=======
+<<<<<<< HEAD
+freq_step=20
+=======
+freq_step=30
+>>>>>>> upstream/master
+>>>>>>> 85142c0097d887e09616e9cde189a5b9133b4e17
 freq_step_dec=5
 freq_up_brake=5
 down_differential=5
@@ -66,11 +74,25 @@ up_threshold_at_min_freq_sleep=80
 up_threshold_sleep=80
 down_threshold_sleep=60
 inc_cpu_load_at_min_freq_sleep=60
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+inc_cpu_load_sleep=90
+dec_cpu_load_sleep=90
+up_avg_load_sleep=65
+down_avg_load_sleep=30
+cpu_up_rate_sleep=20
+=======
+>>>>>>> 85142c0097d887e09616e9cde189a5b9133b4e17
 inc_cpu_load_sleep=80
 dec_cpu_load_sleep=80
 up_avg_load_sleep=65
 down_avg_load_sleep=30
 cpu_up_rate_sleep=25
+<<<<<<< HEAD
+=======
+>>>>>>> upstream/master
+>>>>>>> 85142c0097d887e09616e9cde189a5b9133b4e17
 cpu_down_rate_sleep=20
 sampling_rate_sleep=80000
 hotplug_sampling_rate_sleep=15000
@@ -83,7 +105,15 @@ hotplug_freq_2_0_sleep=200000
 hotplug_rq_1_1_sleep=100
 hotplug_rq_2_0_sleep=100
 hotplug_compare_level_sleep=0
+<<<<<<< HEAD
 freq_step_sleep=30
+=======
+<<<<<<< HEAD
+freq_step_sleep=10
+=======
+freq_step_sleep=30
+>>>>>>> upstream/master
+>>>>>>> 85142c0097d887e09616e9cde189a5b9133b4e17
 freq_step_dec_sleep=10
 freq_up_brake_sleep=10
 down_differential_sleep=5
