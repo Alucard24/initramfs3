@@ -58,13 +58,8 @@ inc_cpu_load=80
 dec_cpu_load=60
 up_avg_load=65
 down_avg_load=30
-<<<<<<< HEAD
 cpu_up_rate=10
-cpu_down_rate=10
-=======
-cpu_up_rate=7
-cpu_down_rate=3
->>>>>>> e91b22dcc0fb9d9deadbb18c42f1dad8cbb733bb
+cpu_down_rate=20
 sampling_rate=60000
 hotplug_sampling_rate=40000
 sampling_up_factor=1
