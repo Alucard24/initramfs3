@@ -256,10 +256,10 @@
 		<seekBar description="The frequency at which governor scales CPU down. Avg Load less than down_avg_load: Cpu Hotplug OUT. (Only for Nightmare) (default is 30)"
 			name="down_avg_load" action="generic /tmp/down_avg_load" unit="%" min="10" reversed="false" step="1" max="100"/>
 
-		<seekBar description="No of samples to evaluate load to scale CPU Up. After cpu_up_rate samples are finished for a frequency, CPU scale-Up logic is executed. In other words - before scaling Up, cpu_up_rate*up_sample_time micro seconds are spend at a frequency. (Only for lulzActiveQ, PegasusQ, Nightmare) (default is 7)"
+		<seekBar description="No of samples to evaluate load to scale CPU Up. After cpu_up_rate samples are finished for a frequency, CPU scale-Up logic is executed. In other words - before scaling Up, cpu_up_rate*up_sample_time micro seconds are spend at a frequency. (Only for lulzActiveQ, PegasusQ, Nightmare) (default is 10)"
 			name="cpu_up_rate" action="generic /tmp/cpu_up_rate" unit="%" min="1" reversed="false" step="1" max="100"/>
 
-		<seekBar description="No of samples to evaluate load to scale CPU Down. After CPU_down_rate samples are finished for a frequency, CPU scale-Down logic is executed. In other words - before scaling Down, cpu_down_rate*down_sample_time micro seconds are spend at a frequency. (Only for lulzActiveQ, PegasusQ, Nightmare) (default is 3)"
+		<seekBar description="No of samples to evaluate load to scale CPU Down. After CPU_down_rate samples are finished for a frequency, CPU scale-Down logic is executed. In other words - before scaling Down, cpu_down_rate*down_sample_time micro seconds are spend at a frequency. (Only for lulzActiveQ, PegasusQ, Nightmare) (default is 20)"
 			name="cpu_down_rate" action="generic /tmp/cpu_down_rate" unit="%" min="1" reversed="false" step="1" max="100"/>
 
 		<seekBar description="Measured in uS and actual meaning being Sampling Interval, this factor determines how often the governor should poll for CPU usage in terms of frequency and load percentage to make scaling decisions - either scale CPU Up or scale it Down. (Only for HYPER, OnDemand, Intellimand, PegasusQ, Nightmare, Conservative, Scary, Sleepy) (default is 60000)"
@@ -528,11 +528,6 @@
 		</spinner>
 
 		<button description="ZRAM state check" name="ZRAM STATS" action="push-actions/zramstats" label="ZRAM STATS"/>
-
-		<checkbox description="Enable or Disable 'KSM-Control'. This merge some memory but need cpu-power ..."
-			name="KSM-Control" action="generic_cortex /tmp/cortexbrain_ksm_control" label="KSM-Control"/>
-
-		<button description="KSM state check" name="KSM STATS" action="push-actions/ksmstats" label="KSM STATS"/>
 
 	</settingsPane>
 
@@ -1078,6 +1073,9 @@
 
 		<checkbox description="Enable or Disable 'Memory-Tweaks'."
 			name="Memory-Tweaks" action="generic_cortex /tmp/cortexbrain_memory" label="Memory-Tweaks"/>
+
+		<checkbox description="Enable or Disable 'KSM-Control'. This merge some memory but need cpu-power ..."
+			name="KSM-Control" action="generic_cortex /tmp/cortexbrain_ksm_control" label="KSM-Control"/>
 
 		<checkbox description="Enable or Disable 'Battery-Tweaks'."
 			name="Battery-Tweaks" action="generic_cortex /tmp/cortexbrain_battery" label="Battery-Tweaks"/>
