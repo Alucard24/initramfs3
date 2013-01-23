@@ -614,12 +614,12 @@ if [ "$cortexbrain_ksm_control" == on ]; then
 		fi;
 	}
 
-	(while [ 1 ]; do
-		cat /sys/power/wait_for_fb_wake;
-		sleep $KSM_MONITOR_INTERVAL &
-		wait $!;
-		ADJUST_KSM;
-	done &);
+#	(while [ 1 ]; do
+#		cat /sys/power/wait_for_fb_wake;
+#		sleep $KSM_MONITOR_INTERVAL &
+#		wait $!;
+#		ADJUST_KSM;
+#	done &);
 fi;
 
 # ==============================================================
@@ -790,7 +790,9 @@ MEGA_BOOST_CPU_TWEAKS()
 		echo "20" > /sys/module/stand_hotplug/parameters/load_h0;
 		echo "20" > /sys/module/stand_hotplug/parameters/load_l1;
 
-		if [ "$scaling_max_freq" -ge 1000000 ]; then
+		if [ "$scaling_max_freq" == 1200000 ] && [ "$scaling_max_freq_oc" -ge 1200000 ]; then
+			echo "$scaling_max_freq_oc" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+		elif [ "$scaling_max_freq" -ge 1000000 ]; then
 			echo "$scaling_max_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 		else
 			echo "1000000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
@@ -845,19 +847,19 @@ IPV6()
 KERNEL_SCHED()
 {
 	local state="$1";
+
 	if [ "${state}" == "awake" ]; then
-		echo "18000000" > /proc/sys/kernel/sched_latency_ns;
-		echo "3000000" > /proc/sys/kernel/sched_wakeup_granularity_ns;
-		echo "1500000" > /proc/sys/kernel/sched_min_granularity_ns;
+		echo "0" > /proc/sys/kernel/sched_child_runs_first;
+		echo "1000000" > /proc/sys/kernel/sched_latency_ns;
+		echo "100000" > /proc/sys/kernel/sched_min_granularity_ns;
+		echo "2000000" > /proc/sys/kernel/sched_wakeup_granularity_ns;
 	elif [ "${state}" == "sleep" ]; then
-		echo "20000000" > /proc/sys/kernel/sched_latency_ns;
-		echo "4000000" > /proc/sys/kernel/sched_wakeup_granularity_ns;
-		echo "2000000" > /proc/sys/kernel/sched_min_granularity_ns;
-	elif [ "${state}" == "test" ]; then
-		echo "36000000" > /proc/sys/kernel/sched_latency_ns;
-		echo "6000000" > /proc/sys/kernel/sched_wakeup_granularity_ns;
-		echo "3000000" > /proc/sys/kernel/sched_min_granularity_ns;
+		echo "1" > /proc/sys/kernel/sched_child_runs_first;
+		echo "10000000" > /proc/sys/kernel/sched_latency_ns;
+		echo "1500000" > /proc/sys/kernel/sched_min_granularity_ns;
+		echo "2000000" > /proc/sys/kernel/sched_wakeup_granularity_ns;
 	fi;
+	echo "-1" > /proc/sys/kernel/sched_rt_runtime_us;
 
 	log -p i -t $FILE_NAME "*** KERNEL_SCHED ***: ${state}";
 }
@@ -981,7 +983,12 @@ AWAKE_MODE()
 
 		if [ "$cortexbrain_cpu" == on ]; then
 			echo "$scaling_min_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
-			echo "$scaling_max_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+
+			if [ "$scaling_max_freq" == 1200000 ] && [ "$scaling_max_freq_oc" -ge 1200000 ]; then
+				echo "$scaling_max_freq_oc" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+			else
+				echo "$scaling_max_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+			fi;
 		fi;
 
 		MALI_TIMEOUT "awake";
@@ -1014,8 +1021,7 @@ SLEEP_MODE()
 
 		MALI_TIMEOUT "sleep";
 
-		# disabled for testing ...
-		#KERNEL_SCHED "sleep";
+		KERNEL_SCHED "sleep";
 
 		GESTURES "sleep";
 
