@@ -1,4 +1,5 @@
-scaling_max_freq=1500000
+scaling_max_freq=1200000
+scaling_max_freq_oc=1500000
 scaling_min_freq=200000
 smooth_level0=4
 scaling_governor=HYPER
@@ -180,7 +181,8 @@ zramtweaks=3
 gpsregion=No_GPS_Zone_changes
 scheduler=zen
 sleep_scheduler=noop
-oom_config=aggressive
+oom_config_screen_on=aggressive
+oom_config_screen_off=aggressive
 usb_mode=default
 auto_mount_sd=on
 default_stats=off
