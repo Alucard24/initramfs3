@@ -53,6 +53,11 @@ chmod 777 /proc/sys/vm/mmap_min_addr;
 # Cortex parent should be ROOT/INIT and not STweaks
 nohup /sbin/ext/cortexbrain-tune.sh; 
 
+if [ ! -d /system/etc/init.d ]; then
+	mkdir /system/etc/init.d/
+	chmod 755 /system/etc/init.d/ -R
+fi;
+
 (
 	PROFILE=`cat /data/.siyah/.active.profile`;
 	. /data/.siyah/$PROFILE.profile;
@@ -143,6 +148,13 @@ echo "0" > /proc/sys/kernel/kptr_restrict;
 	$BB mv /res/no-push-on-boot/* /res/customconfig/actions/push-actions/;
 	pkill -f "com.gokhanmoral.stweaks.app";
 	$BB rm -f /data/.siyah/booting;
+
+	# Temp fix for sound bug at JB Sammy ROMS.
+	if [ `cat /tmp/jbsammy_installed` == "1" ] then
+		$BB sh /res/uci.sh enable_mask 1;
+		$BB sh /res/uci.sh enable_mask_sleep 1;
+	fi;
+	echo "0" > /tmp/jbsammy_installed;
 
 	# change USB mode MTP or Mass Storage
 	$BB sh /res/uci.sh usb-mode ${usb_mode};
