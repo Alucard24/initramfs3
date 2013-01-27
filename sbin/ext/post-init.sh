@@ -1,6 +1,6 @@
 #!/sbin/busybox sh
 
-BB="/sbin/busybox";
+BB=/sbin/busybox
 
 # first mod the partitions then boot
 $BB sh /sbin/ext/system_tune_on_init.sh;
@@ -31,7 +31,7 @@ fi;
 [ ! -f /data/.siyah/extreme_performance.profile ] && cp -a /res/customconfig/extreme_performance.profile /data/.siyah/extreme_performance.profile;
 [ ! -f /data/.siyah/extreme_battery.profile ] && cp -a /res/customconfig/extreme_battery.profile /data/.siyah/extreme_battery.profile;
 
-$BB chmod 0777 /data/.siyah/ -R;
+$BB chmod -R 0777 /data/.siyah/;
 
 . /res/customconfig/customconfig-helper;
 read_defaults;
@@ -47,21 +47,31 @@ echo "on" > /sys/devices/virtual/misc/second_core/hotplug_on;
 echo "off" > /sys/devices/virtual/misc/second_core/second_core_on;
 
 # oom and mem perm fix
-chmod 777 /sys/module/lowmemorykiller/parameters/cost;
-chmod 777 /proc/sys/vm/mmap_min_addr;
+$BB chmod 777 /sys/module/lowmemorykiller/parameters/cost;
+$BB chmod 777 /proc/sys/vm/mmap_min_addr;
+
+# some nice thing for dev
+$BB ln -s /sys/devices/system/cpu/cpu0/cpufreq /cpufreq;
+$BB ln -s /sys/devices/system/cpu/cpufreq/ /cpugov;
 
 # Cortex parent should be ROOT/INIT and not STweaks
 nohup /sbin/ext/cortexbrain-tune.sh; 
+
+# create init.d folder if missing
+if [ ! -d /system/etc/init.d ]; then
+	mkdir /system/etc/init.d/
+	$BB chmod -R 755 /system/etc/init.d/;
+fi;
 
 (
 	PROFILE=`cat /data/.siyah/.active.profile`;
 	. /data/.siyah/$PROFILE.profile;
 
 	MIUI_JB=0;
-	[ "`/sbin/busybox grep -i cMIUI /system/build.prop`" ] && MIUI_JB=1;
+	[ "`$BB grep -i cMIUI /system/build.prop`" ] && MIUI_JB=1;
 
 	if [ $init_d == on ] || [ "$MIUI_JB" == 1 ]; then
-		/sbin/busybox sh /sbin/ext/run-init-scripts.sh;
+		$BB sh /sbin/ext/run-init-scripts.sh;
 	fi;
 )&
 
@@ -70,7 +80,6 @@ if [ "$logger" == "off" ]; then
 	echo "0" > /sys/module/ump/parameters/ump_debug_level;
 	echo "0" > /sys/module/mali/parameters/mali_debug_level;
 	echo "0" > /sys/module/kernel/parameters/initcall_debug;
-	echo "0" > /sys/module/lowmemorykiller/parameters/debug_level;
 	echo "0" > /sys/module/earlysuspend/parameters/debug_mask;
 	echo "0" > /sys/module/alarm/parameters/debug_mask;
 	echo "0" > /sys/module/alarm_dev/parameters/debug_mask;
@@ -104,7 +113,7 @@ echo "0" > /sys/module/cpuidle_exynos4/parameters/log_en;
 
 # for ntfs automounting
 mkdir /mnt/ntfs;
-chmod 777 /mnt/ntfs/ -R;
+$BB chmod -R 777 /mnt/ntfs/;
 mount -t tmpfs -o mode=0777,gid=1000 tmpfs /mnt/ntfs
 
 $BB sh /sbin/ext/properties.sh;
@@ -124,7 +133,7 @@ echo "0" > /proc/sys/kernel/kptr_restrict;
 (
 	# Stop uci.sh from running all the PUSH Buttons in stweaks on boot.
 	$BB mount -o remount,rw rootfs;
-	$BB chown root:system /res/customconfig/actions/ -R;
+	$BB chown -R root:system /res/customconfig/actions/;
 	$BB chmod 6755 /res/customconfig/actions/*;
 	$BB mv /res/customconfig/actions/push-actions/* /res/no-push-on-boot/;
 	$BB chmod 6755 /res/no-push-on-boot/*;
@@ -143,6 +152,14 @@ echo "0" > /proc/sys/kernel/kptr_restrict;
 	$BB mv /res/no-push-on-boot/* /res/customconfig/actions/push-actions/;
 	pkill -f "com.gokhanmoral.stweaks.app";
 	$BB rm -f /data/.siyah/booting;
+
+	# Temp fix for sound bug at JB Sammy ROMS.
+	JB_ROM=`cat /tmp/jbsammy_installed`;
+	if [ "$JB_ROM" == "1" ]; then
+		$BB sh /res/uci.sh enable_mask 1;
+		$BB sh /res/uci.sh enable_mask_sleep 1;
+	fi;
+	echo "0" > /tmp/jbsammy_installed;
 
 	# change USB mode MTP or Mass Storage
 	$BB sh /res/uci.sh usb-mode ${usb_mode};
