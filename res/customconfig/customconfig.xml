@@ -126,55 +126,55 @@
 		<seekBar description="CPU Voltage for 1500 MHz. (Default: 1400 mV)"
 			name="CPU Voltage 1500 MHz" action="cpu-voltage 2" unit="mV" min="1300" reversed="false" step="25" max="1500"/>
 
-		<seekBar description="CPU Voltage for 1400 MHz. (Default: 1350 mV)"
+		<seekBar description="CPU Voltage for 1400 MHz. (Default: 1375 mV)"
 			name="CPU Voltage 1400 MHz" action="cpu-voltage 3" unit="mV" min="1250" reversed="false" step="25" max="1450"/>
 
-		<seekBar description="CPU Voltage for 1300 MHz. (Default: 1300 mV)"
+		<seekBar description="CPU Voltage for 1300 MHz. (Default: 1350 mV)"
 			name="CPU Voltage 1300 MHz" action="cpu-voltage 4" unit="mV" min="1200" reversed="false" step="25" max="1400"/>
 
-		<seekBar description="CPU Voltage for 1200 MHz. (Default: 1250 mV)"
+		<seekBar description="CPU Voltage for 1200 MHz. (Default: 1275 mV)"
 			name="CPU Voltage 1200 MHz" action="cpu-voltage 5" unit="mV" min="1150" reversed="false" step="25" max="1350"/>
 
-		<seekBar description="CPU Voltage for 1152 MHz. (Default: 1200 mV)"
+		<seekBar description="CPU Voltage for 1152 MHz. (Default: 1250 mV)"
 			name="CPU Voltage 1152 MHz" action="cpu-voltage 6" unit="mV" min="1100" reversed="false" step="25" max="1300"/>
 
-		<seekBar description="CPU Voltage for 1100 MHz. (Default: 1200 mV)"
+		<seekBar description="CPU Voltage for 1100 MHz. (Default: 1225 mV)"
 			name="CPU Voltage 1100 MHz" action="cpu-voltage 7" unit="mV" min="1100" reversed="false" step="25" max="1300"/>
 
-		<seekBar description="CPU Voltage for 1052 MHz. (Default: 1150 mV)"
+		<seekBar description="CPU Voltage for 1052 MHz. (Default: 1200 mV)"
 			name="CPU Voltage 1052 MHz" action="cpu-voltage 8" unit="mV" min="1050" reversed="false" step="25" max="1250"/>
 
-		<seekBar description="CPU Voltage for 1000 MHz. (Default: 1150 mV)"
+		<seekBar description="CPU Voltage for 1000 MHz. (Default: 1175 mV)"
 			name="CPU Voltage 1000 MHz" action="cpu-voltage 9" unit="mV" min="1050" reversed="false" step="25" max="1250"/>
 
-		<seekBar description="CPU Voltage for 952 MHz. (Default: 1100 mV)"
+		<seekBar description="CPU Voltage for 952 MHz. (Default: 1150 mV)"
 			name="CPU Voltage 952 MHz" action="cpu-voltage 10" unit="mV" min="1000" reversed="false" step="25" max="1200"/>
 
-		<seekBar description="CPU Voltage for 900 MHz. (Default: 1100 mV)"
+		<seekBar description="CPU Voltage for 900 MHz. (Default: 1125 mV)"
 			name="CPU Voltage 900 MHz" action="cpu-voltage 11" unit="mV" min="1000" reversed="false" step="25" max="1200"/>
 
-		<seekBar description="CPU Voltage for 852 MHz. (Default: 1050 mV)"
+		<seekBar description="CPU Voltage for 852 MHz. (Default: 1100 mV)"
 			name="CPU Voltage 852 MHz" action="cpu-voltage 12" unit="mV" min="950" reversed="false" step="25" max="1150"/>
 
-		<seekBar description="CPU Voltage for 800 MHz. (Default: 1050 mV)"
+		<seekBar description="CPU Voltage for 800 MHz. (Default: 1075 mV)"
 			name="CPU Voltage 800 MHz" action="cpu-voltage 13" unit="mV" min="950" reversed="false" step="25" max="1150"/>
 
-		<seekBar description="CPU Voltage for 750 MHz. (Default: 1025 mV)"
+		<seekBar description="CPU Voltage for 750 MHz. (Default: 1050 mV)"
 			name="CPU Voltage 750 MHz" action="cpu-voltage 14" unit="mV" min="925" reversed="false" step="25" max="1125"/>
 
 		<seekBar description="CPU Voltage for 700 MHz. (Default: 1025 mV)"
 			name="CPU Voltage 700MHz" action="cpu-voltage 15" unit="mV" min="925" reversed="false" step="25" max="1125"/>
 
-		<seekBar description="CPU Voltage for 650 MHz. (Default: 1000 mV)"
+		<seekBar description="CPU Voltage for 650 MHz. (Default: 1025 mV)"
 			name="CPU Voltage 650 MHz" action="cpu-voltage 16" unit="mV" min="900" reversed="false" step="25" max="1100"/>
 
-		<seekBar description="CPU Voltage for 600 MHz. (Default: 1000 mV)"
+		<seekBar description="CPU Voltage for 600 MHz. (Default: 1025 mV)"
 			name="CPU Voltage 600 MHz" action="cpu-voltage 17" unit="mV" min="900" reversed="false" step="25" max="1100"/>
 
-		<seekBar description="CPU Voltage for 550 MHz. (Default: 975 mV)"
+		<seekBar description="CPU Voltage for 550 MHz. (Default: 1000 mV)"
 			name="CPU Voltage 550 MHz" action="cpu-voltage 18" unit="mV" min="875" reversed="false" step="25" max="1075"/>
 
-		<seekBar description="CPU Voltage for 500 MHz. (Default: 975 mV)"
+		<seekBar description="CPU Voltage for 500 MHz. (Default: 1000 mV)"
 			name="CPU Voltage 500 MHz" action="cpu-voltage 19" unit="mV" min="875" reversed="false" step="25" max="1075"/>
 
 		<seekBar description="CPU Voltage for 450 MHz. (Default: 975 mV)"
@@ -282,10 +282,10 @@
 		<seekBar description="When 2nd core is online, If frequency of 1st core is less than freq_cpu1off and load average is less than trans_load_l1, 2nd core will turn off. (Only for Nightmare) (default is 700000)"
 			name="freq_cpu1off" action="generic_cortex /tmp/freq_cpu1off" unit="kHz" min="100000" reversed="false" step="100000" max="1500000"/>
 
-		<seekBar description="Defines how much as a percentage of maximum frequency, governor should decrease CPU frequency each time CPU load reaches dec_cpu_load. (Only for Nightmare) (default is 5)"
+		<seekBar description="Defines how much as a percentage of maximum frequency, governor should decrease CPU frequency each time CPU load reaches dec_cpu_load. (Only for Nightmare) (default is 15)"
 			name="freq_step_dec" action="generic_cortex /tmp/freq_step_dec" unit="%" min="0" reversed="false" step="1" max="100"/>
 
-		<seekBar description="Brake scale up frequency when load >= inc_cpu_load. (Only for Nightmare) (default is 5)"
+		<seekBar description="Brake scale up frequency when load >= inc_cpu_load. (Only for Nightmare) (default is 15)"
 			name="freq_up_brake" action="generic_cortex /tmp/freq_up_brake" unit="step" min="0" reversed="false" step="1" max="100"/>
 
 		<seekBar description="This threshold is used as up threshold while sampling at frequencies less than freq_for_responsiveness. Above that, normal inc_cpu_load is used. This gives us an option to make scaling aggressive/relaxed until a frequency and normal for higher frequencies. Again, during calculation of optimal frequency which should not trigger up policy, down threshold to consider is difference between inc_cpu_load_at_min_freq and freq_up_brake. (Only for Nightmare) (default is 60)"
@@ -433,10 +433,10 @@
 		<seekBar description="When 2nd core is online, If frequency of 1st core is less than freq_cpu1off_sleep and load average is less than trans_load_l1_scroff, 2nd core will turn off. (Only for Nightmare) (default is 500000)"
 			name="freq_cpu1off_sleep" action="generic_cortex /tmp/freq_cpu1off_sleep" unit="kHz" min="100000" reversed="false" step="100000" max="1500000"/>
 
-		<seekBar description="Defines how much as a percentage of maximum frequency, governor should decrease CPU frequency each time CPU load reaches dec_cpu_load. (Only for Nightmare) (default is 10)"
+		<seekBar description="Defines how much as a percentage of maximum frequency, governor should decrease CPU frequency each time CPU load reaches dec_cpu_load. (Only for Nightmare) (default is 15)"
 			name="freq_step_dec_sleep" action="generic_cortex /tmp/freq_step_dec_sleep" unit="%" min="0" reversed="false" step="1" max="100"/>
 
-		<seekBar description="Brake scale up frequency when load >= inc_cpu_load. (Only for Nightmare) (default is 10)"
+		<seekBar description="Brake scale up frequency when load >= inc_cpu_load. (Only for Nightmare) (default is 15)"
 			name="freq_up_brake_sleep" action="generic_cortex /tmp/freq_up_brake_sleep" unit="step" min="0" reversed="false" step="1" max="100"/>
 
 		<seekBar description="This threshold is used as up threshold while sampling at frequencies less than freq_for_responsiveness. Above that, normal inc_cpu_load is used. This gives us an option to make scaling aggressive/relaxed until a frequency and normal for higher frequencies. Again, during calculation of optimal frequency which should not trigger up policy, down threshold to consider is difference between inc_cpu_load_at_min_freq and freq_up_brake. (Only for Nightmare) (default is 60)"
