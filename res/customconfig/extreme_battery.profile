@@ -1,3 +1,5 @@
+boot_boost=1200000
+booster_sleep_max=60
 scaling_max_freq=1000000
 scaling_max_freq_oc=1200000
 scaling_min_freq=200000
@@ -194,7 +196,7 @@ gpsregion=No_GPS_Zone_changes
 scheduler=zen
 sleep_scheduler=noop
 oom_config_screen_on=medium
-oom_config_screen_off=light
+oom_config_screen_off=aggressive
 dirty_background_ratio=20
 dirty_ratio=20
 usb_mode=default
