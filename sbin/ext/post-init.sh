@@ -129,6 +129,7 @@ $BB chmod -R 755 /lib;
 	# order of modules load is important.
 	$BB insmod /lib/modules/j4fs.ko;
 	$BB mount -t j4fs /dev/block/mmcblk0p4 /mnt/.lfs
+	$BB insmod /lib/modules/ffu.ko;
 	$BB insmod /lib/modules/Si4709_driver.ko;
 
 	if [ "$usbserial_module" == "on" ]; then
@@ -204,14 +205,6 @@ $BB rm -f /data/.siyah/booting;
 
 # update cpu tunig after profiles load
 $BB sh /sbin/ext/cortexbrain-tune.sh apply_cpu update > /dev/null;
-
-# Temp fix for sound bug at JB Sammy ROMS.
-JB_ROM=`cat /tmp/jbsammy_installed`;
-if [ "$JB_ROM" == "1" ]; then
-	$BB sh /res/uci.sh generic /sys/module/cpuidle_exynos4/parameters/enable_mask 1;
-	$BB sh /res/uci.sh generic_cortex /tmp/enable_mask_sleep 1;
-fi;
-echo "0" > /tmp/jbsammy_installed;
 
 # change USB mode MTP or Mass Storage
 $BB sh /res/uci.sh usb-mode ${usb_mode};
