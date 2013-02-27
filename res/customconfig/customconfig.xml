@@ -594,19 +594,19 @@
 			name="GPU Voltage Levels">
 
 		<seekBar description="GPU Voltage for the first step" 
-			name="GPU Voltage Level1" action="gpu-voltage 1" unit="mV" min="800" reversed="false" step="50" max="1300"/>
+			name="GPU Voltage Level1" action="gpu-voltage 1" unit="mV" min="850" reversed="false" step="50" max="1300"/>
 
 		<seekBar description="GPU Voltage for the second step" 
-			name="GPU Voltage Level2" action="gpu-voltage 2" unit="mV" min="800" reversed="false" step="50" max="1300"/>
+			name="GPU Voltage Level2" action="gpu-voltage 2" unit="mV" min="850" reversed="false" step="50" max="1300"/>
 
 		<seekBar description="GPU Voltage for the third step" 
-			name="GPU Voltage Level3" action="gpu-voltage 3" unit="mV" min="800" reversed="false" step="50" max="1300"/>
+			name="GPU Voltage Level3" action="gpu-voltage 3" unit="mV" min="850" reversed="false" step="50" max="1300"/>
 
 		<seekBar description="GPU Voltage for the fourth step" 
-			name="GPU Voltage Level4" action="gpu-voltage 4" unit="mV" min="800" reversed="false" step="50" max="1300"/>
+			name="GPU Voltage Level4" action="gpu-voltage 4" unit="mV" min="850" reversed="false" step="50" max="1300"/>
 
 		<seekBar description="GPU Voltage for the fifth step" 
-			name="GPU Voltage Level5" action="gpu-voltage 5" unit="mV" min="800" reversed="false" step="50" max="1300"/>
+			name="GPU Voltage Level5" action="gpu-voltage 5" unit="mV" min="850" reversed="false" step="50" max="1300"/>
 
 	</settingsPane>
 
@@ -1039,6 +1039,13 @@
 			<spinnerItem name="DEBUG" value="debug"/> 
 			<spinnerItem name="DISABLED" value="disabled"/> 
 		</spinner>
+
+		<checkbox description="Enable or Disable the 'DATA turns off while screen is off' function. Depends on CortexBrain-Background-Process to be enabled! (dynamic by cortex)."
+			name="Auto-DATA" action="generic_cortex /tmp/cortexbrain_auto_tweak_mobile" label="Force Auto-Data"/>
+
+		<seekBar description="Here you can set a delay before DATA is forced to OFF when screen is turned off. Works only if 'Auto-DATA' is Enabled! (dynamic by cortex)."
+			name="DATA Turn Off Delay (in sec)" action="generic_cortex /tmp/cortexbrain_auto_tweak_mobile_sleep_delay"
+			unit="sec" min="0" reversed="false" step="30" max="300"/>
 
 		<checkbox description="Enable or Disable the 'Wifi turns off while screen is off' function. Depends on CortexBrain-Background-Process to be enabled! (dynamic by cortex)."
 			name="Auto-Wifi" action="generic_cortex /tmp/cortexbrain_auto_tweak_wifi" label="Force Auto-Wifi"/>
