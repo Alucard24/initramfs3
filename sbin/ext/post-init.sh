@@ -48,7 +48,7 @@ read_config;
 
 # custom boot booster stage 1
 echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
-echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
+echo "400000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 
 # mdnie sharpness tweak
 if [ "$mdniemod" == "on" ]; then
@@ -125,23 +125,23 @@ fi;
 $BB chmod -R 755 /lib;
 
 (
-	sleep 30;
+	sleep 40;
 	# order of modules load is important.
-	$BB insmod /lib/modules/j4fs.ko;
-	$BB mount -t j4fs /dev/block/mmcblk0p4 /mnt/.lfs
-	$BB insmod /lib/modules/Si4709_driver.ko;
+	insmod /lib/modules/j4fs.ko;
+	mount -t j4fs /dev/block/mmcblk0p4 /mnt/.lfs
+	insmod /lib/modules/Si4709_driver.ko;
 
 	if [ "$usbserial_module" == "on" ]; then
-		$BB insmod /lib/modules/usbserial.ko;
-		$BB insmod /lib/modules/ftdi_sio.ko;
-		$BB insmod /lib/modules/pl2303.ko;
+		insmod /lib/modules/usbserial.ko;
+		insmod /lib/modules/ftdi_sio.ko;
+		insmod /lib/modules/pl2303.ko;
 	fi;
 	if [ "$usbnet_module" == "on" ]; then
-		$BB insmod /lib/modules/usbnet.ko;
-		$BB insmod /lib/modules/asix.ko;
+		insmod /lib/modules/usbnet.ko;
+		insmod /lib/modules/asix.ko;
 	fi;
 	if [ "$cifs_module" == "on" ]; then
-		$BB insmod /lib/modules/cifs.ko;
+		insmod /lib/modules/cifs.ko;
 	fi;
 )&
 
@@ -167,7 +167,7 @@ $BB sh /sbin/ext/properties.sh;
 	# custom boot booster
 	while [ "`cat /tmp/uci_done`" != "1" ]; do
 		echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
-		echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
+		echo "400000" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 		pkill -f "com.gokhanmoral.stweaks.app";
 		echo "Waiting For UCI to finish";
 		sleep 20;
