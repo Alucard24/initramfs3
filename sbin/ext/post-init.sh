@@ -36,12 +36,6 @@ fi;
 
 $BB chmod -R 0777 /data/.siyah/;
 
-# for dev testing
-PROFILES=`$BB ls -A1 /data/.siyah/*.profile`;
-for p in $PROFILES; do
-cp $p $p.test;
-done;
-
 . /res/customconfig/customconfig-helper;
 read_defaults;
 read_config;
@@ -207,6 +201,24 @@ $BB sh /sbin/ext/cortexbrain-tune.sh apply_cpu update > /dev/null;
 
 # change USB mode MTP or Mass Storage
 $BB sh /res/uci.sh usb-mode ${usb_mode};
+
+(
+	# Mount Sec ROM DATA on Boot, we need to wait till sdcard is mounted.
+	if [ -e /sdcard/.secondrom/data.img ] || [ -e /storage/sdcard0/.secondrom/data.img ]; then
+		sleep 10;
+		mount -o remount,rw /
+		mkdir /data_sec_rom;
+		chmod 777 /data_sec_rom;
+		FREE_LOOP=`losetup -f`;
+		if [ -e /sdcard/.secondrom/data.img ]; then
+			DATA_IMG=/sdcard/.secondrom/data.img
+		elif [ -e /storage/sdcard0/.secondrom/data.img ]; then
+			DATA_IMG=/storage/sdcard0/.secondrom/data.img
+		fi;
+		losetup $FREE_LOOP $DATA_IMG;
+		mount -t ext4 $FREE_LOOP /data_sec_rom;
+	fi;
+)&
 
 (
 	# ###############################################################
