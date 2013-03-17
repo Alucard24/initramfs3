@@ -17,7 +17,7 @@ echo "1000" > /proc/1/oom_score_adj;
 
 PIDOFINIT=`pgrep -f "/sbin/ext/post-init.sh"`;
 for i in $PIDOFINIT; do
-	echo "-600" > /proc/$i/oom_score_adj;
+	echo "-600" > /proc/${i}/oom_score_adj;
 done;
 
 if [ ! -d /data/.siyah ]; then
@@ -47,6 +47,14 @@ $BB chmod -R 0777 /data/.siyah/;
 read_defaults;
 read_config;
 
+# HACK: we have problem on boot with stuck service GoogleBackupTransport if many apps installed
+# here i will rename the GoogleBackupTransport.apk to boot without it and then restore to prevent
+# system not responding popup on after boot.
+if [ -e /data/dalvik-cache/not_first_boot ]; then
+	mount -o remount,rw /system;
+	mv /system/app/GoogleBackupTransport.apk /system/app/GoogleBackupTransport.apk.off
+fi;
+
 # custom boot booster stage 1
 echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 
@@ -72,7 +80,7 @@ $BB chmod -R 755 /lib;
 
 (
 	sleep 50;
-	# order of modules load is important.
+	# order of modules load is important
 	$BB insmod /lib/modules/j4fs.ko;
 	$BB mount -t j4fs /dev/block/mmcblk0p4 /mnt/.lfs
 	$BB insmod /lib/modules/Si4709_driver.ko;
@@ -115,14 +123,11 @@ if [ ! -d /system/etc/init.d ]; then
 fi;
 
 (
-	PROFILE=`cat /data/.siyah/.active.profile`;
-	. /data/.siyah/$PROFILE.profile;
-
 	MIUI_JB=0;
 	[ "`$BB grep -i cMIUI /system/build.prop`" ] && MIUI_JB=1;
 
 	if [ $init_d == on ] || [ "$MIUI_JB" == 1 ]; then
-		/sbin/busybox sh /sbin/ext/run-init-scripts.sh;
+		$BB sh /sbin/ext/run-init-scripts.sh;
 	fi;
 )&
 
@@ -178,7 +183,7 @@ chmod 666 /tmp/uci_done;
 	ACORE_APPS=`pgrep acore`;
 	if [ "a$ACORE_APPS" != "a" ]; then
 		for c in `pgrep acore`; do
-			echo "900" > /proc/$c/oom_score_adj;
+			echo "900" > /proc/${c}/oom_score_adj;
 		done;
 	fi;
 
@@ -210,12 +215,20 @@ chmod 666 /tmp/uci_done;
 		mount -t ext4 /dev/block/mmcblk0p10 /data_pri_rom;
 	fi;
 
-	# restore normal freq.
+	# restore normal freq
 	echo "$scaling_min_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 	if [ "$scaling_max_freq" == "1000000" ] && [ "$scaling_max_freq_oc" -ge "1000000" ]; then
 		echo "$scaling_max_freq_oc" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 	else
 		echo "$scaling_max_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
+	fi;
+
+	# HACK: restore GoogleBackupTransport.apk after boot.
+	if [ -e /data/dalvik-cache/not_first_boot ]; then
+		mv /system/app/GoogleBackupTransport.apk.off /system/app/GoogleBackupTransport.apk
+	else
+		touch /data/dalvik-cache/not_first_boot;
+		chmod 777 /data/dalvik-cache/not_first_boot;
 	fi;
 )&
 
@@ -242,7 +255,7 @@ chmod 666 /tmp/uci_done;
 )&
 
 (
-	# Stop uci.sh from running all the PUSH Buttons in stweaks on boot.
+	# stop uci.sh from running all the PUSH Buttons in stweaks on boot
 	$BB mount -o remount,rw rootfs;
 	$BB chown -R root:system /res/customconfig/actions/;
 	$BB chmod -R 6755 /res/customconfig/actions/;
@@ -295,15 +308,13 @@ chmod 666 /tmp/uci_done;
 	# ###############################################################
 
 	DM=`ls -d /sys/block/dm*`;
-
-	for i in $DM; do
-
+	for i in ${DM}; do
 		if [ -e $i/queue/rotational ]; then
-			echo "0" > $i/queue/rotational;
+			echo "0" > ${i}/queue/rotational;
 		fi;
 
 		if [ -e $i/queue/iostats ]; then
-			echo "0" > $i/queue/iostats;
+			echo "0" > ${i}/queue/iostats;
 		fi;
 	done;
 
