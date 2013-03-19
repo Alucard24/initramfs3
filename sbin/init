@@ -5,7 +5,9 @@ BB=/sbin/busybox
 
 $BB mount -t proc proc /proc;
 $BB mount -t sysfs sysfs /sys;
-echo 102 > /sys/devices/virtual/sec/sec_key/set_homekey;
+if [ -e /sys/devices/virtual/sec/sec_key/set_homekey ]; then
+	echo 102 > /sys/devices/virtual/sec/sec_key/set_homekey;
+fi;
 
 # set "/" rw
 $BB mount -t rootfs -o remount,rw rootfs;
@@ -211,6 +213,7 @@ if [ -f /system/recovery.cpio.gz ]; then
 	$BB zcat /system/recovery.cpio.gz | cpio -idmu;
 fi;
 
+# ROM check init
 B2G=0;
 MIUI_JB=0;
 JELLY=0;
@@ -308,7 +311,7 @@ PARTITION_TUNING()
 		$BB sh -c "/sbin/e2fsck -p $DEVICE_DATA" >> $LOG_DATA;
 	fi;
 
-	# efs check and fix, do not change.
+	# efs check and fix, do not change
 	$BB sh -c "/sbin/e2fsck -fyc /dev/block/mmcblk0p1" > /tmp/efs_check;
 	$BB sh -c "/sbin/e2fsck -p /dev/block/mmcblk0p1" >> /tmp/efs_check;
 	$BB mount -t ext4 /dev/block/mmcblk0p1 /efs;
@@ -411,6 +414,9 @@ POWER_SQL_JB()
 	$BB chmod 755 /system/xbin/sqlite3;
 }
 
+# Kernel check init
+KERNEL_9X=`cat /proc/version | $BB awk '/V9./ {print $3}' | wc -l`;
+
 # network tuning reset to allow real ROM control over H/H+/3G/G signal.
 $BB sed -i "s/ro.ril.hsxpa=[0-9]*//g" /system/build.prop;
 $BB sed -i "s/ro.ril.gprsclass=[0-9]*//g" /system/build.prop;
@@ -444,11 +450,16 @@ elif [ "$B2G" == "1" ]; then
 	SECROM_FUNCTION_SAMMY;
 
 elif [ "$JBSAMMY" == "1" ] || [ "$JBSAMMY2" == "1" ]; then
+	if [ "$KERNEL_9X" == "1" ]; then
+		echo "wrong kernel" > /tmp/wrong_kernel;
+	fi;
 	# Injecting JB Modded by Dorimanx, SUPER libsqlite!
 	POWER_SQL_JB;
 	echo "2" > /proc/sys/kernel/rom_feature_set;
 	$BB cp -a /res/misc/JellyB-Sammy/* /;
-	echo 172 > /sys/devices/virtual/sec/sec_key/set_homekey;
+	if [ -e /sys/devices/virtual/sec/sec_key/set_homekey ]; then
+		echo 172 > /sys/devices/virtual/sec/sec_key/set_homekey;
+	fi;
 	# for system_tune_on_init.sh and for res/crontab_service/service.sh
 	$BB echo "1" > /tmp/sammy_rom;
 
@@ -494,6 +505,9 @@ elif [ "$AOSP" == "0" ]; then
 
 	SECROM_FUNCTION_AOSP;
 else
+	if [ "$KERNEL_9X" == "1" ]; then
+		echo "wrong kernel" > /tmp/wrong_kernel;
+	fi;
 	# If not detected Known ROM, then SAMMY ICS ROM installed.
 	echo "0" > /proc/sys/kernel/rom_feature_set;
 

@@ -470,6 +470,10 @@ TCP_TWEAKS()
 		echo "0" > /proc/sys/net/ipv4/tcp_ecn;
 		echo "3" > /proc/sys/net/ipv4/tcp_keepalive_probes;
 		echo "20" > /proc/sys/net/ipv4/tcp_keepalive_intvl;
+
+		log -p i -t $FILE_NAME "*** TCP_TWEAKS ***: enabled";
+	fi;
+	if [ "$cortexbrain_tcp_ram" == on ]; then
 		echo "1048576" > /proc/sys/net/core/wmem_max;
 		echo "1048576" > /proc/sys/net/core/rmem_max;
 		echo "262144" > /proc/sys/net/core/rmem_default;
@@ -480,7 +484,7 @@ TCP_TWEAKS()
 		echo "4096" > /proc/sys/net/ipv4/udp_rmem_min;
 		echo "4096" > /proc/sys/net/ipv4/udp_wmem_min;
 
-		log -p i -t $FILE_NAME "*** TCP_TWEAKS ***: enabled";
+		log -p i -t $FILE_NAME "*** TCP_RAM_TWEAKS ***: enabled";
 	fi;
 }
 TCP_TWEAKS;
@@ -796,9 +800,9 @@ MALI_TIMEOUT()
 	if [ "${state}" == "awake" ]; then
 		echo "$mali_gpu_utilization_timeout" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
 	elif [ "${state}" == "sleep" ]; then
-		echo "250" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
+		echo "1000" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
 	elif [ "${state}" == "performance" ]; then
-		echo "100" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
+		echo "250" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
 	fi;
 
 	log -p i -t $FILE_NAME "*** MALI_TIMEOUT: ${state} ***";
@@ -1049,7 +1053,6 @@ GAMMA_FIX()
 {
 	echo "$min_gamma" > /sys/class/misc/brightness_curve/min_gamma;
 	echo "$max_gamma" > /sys/class/misc/brightness_curve/max_gamma;
-	echo "$mov_hysti" > /sys/bus/i2c/devices/3-004a/mov_hysti;
 
 	log -p i -t $FILE_NAME "*** GAMMA_FIX: min: $min_gamma max: $max_gamma ***: done";
 }
@@ -1233,7 +1236,7 @@ SLEEP_MODE()
 			log -p i -t $FILE_NAME "*** SCREEN OFF BUT POWERED mode ***";
 		fi;
 	else
-		if [ "$cortexbrain_cpu" == on ]; then
+		if [ "$cortexbrain_cpu" == on ] && [ "$CALL_STATE" == 2 ]; then
 			CENTRAL_CPU_FREQ "sleep_call";
 			on_call=1;
 		fi;
