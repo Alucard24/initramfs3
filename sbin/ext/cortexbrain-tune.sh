@@ -314,14 +314,6 @@ CPU_GOV_TWEAKS()
 		if [ ! -e $freq_up_brake_tmp ]; then
 			freq_up_brake_tmp="/dev/null";
 		fi;
-		local freq_cpu1on_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/freq_cpu1on";
-		if [ ! -e $freq_cpu1on_tmp ]; then
-			freq_cpu1on_tmp="/dev/null";
-		fi;
-		local freq_cpu1off_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/freq_cpu1off";
-		if [ ! -e $freq_cpu1off_tmp ]; then
-			freq_cpu1off_tmp="/dev/null";
-		fi;
 		local trans_load_h0_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/trans_load_h0";
 		if [ ! -e $trans_load_h0_tmp ]; then
 			trans_load_h0_tmp="/dev/null";
@@ -349,8 +341,6 @@ CPU_GOV_TWEAKS()
 
 		# wake_boost-settings
 		if [ "${state}" == "wake_boost" ]; then
-			echo "200000" > $freq_cpu1on_tmp;
-			echo "200000" > $freq_cpu1off_tmp;
 			echo "10" > $trans_load_h0_tmp;
 			echo "10" > $trans_load_l1_tmp;
 			echo "20000" > $sampling_rate_tmp;
@@ -362,8 +352,6 @@ CPU_GOV_TWEAKS()
 			echo "100" > $freq_step_tmp;
 			echo "800000" > $freq_for_responsiveness_tmp;
 			echo "50000" > $sampling_rate_tmp;
-			echo "800000" > $freq_cpu1on_tmp;
-			echo "400000" > $freq_cpu1off_tmp;
 		# sleep-settings
 		elif [ "${state}" == "sleep" ]; then
 			echo "$sampling_rate_sleep" > $sampling_rate_tmp;
@@ -383,8 +371,6 @@ CPU_GOV_TWEAKS()
 			echo "$freq_for_calc_decr_sleep" > $freq_for_calc_decr_tmp;
 			echo "$inc_cpu_load_sleep" > $inc_cpu_load_tmp;
 			echo "$dec_cpu_load_sleep" > $dec_cpu_load_tmp;
-			echo "$freq_cpu1on_sleep" > $freq_cpu1on_tmp;
-			echo "$freq_cpu1off_sleep" > $freq_cpu1off_tmp;
 			echo "$freq_up_brake_sleep" > $freq_up_brake_tmp;
 			echo "$trans_load_h0_scroff" > $trans_load_h0_scroff_tmp;
 			echo "$trans_load_l1_scroff" > $trans_load_l1_scroff_tmp;
@@ -409,8 +395,6 @@ CPU_GOV_TWEAKS()
 			echo "$freq_for_calc_decr" > $freq_for_calc_decr_tmp;
 			echo "$inc_cpu_load" > $inc_cpu_load_tmp;
 			echo "$dec_cpu_load" > $dec_cpu_load_tmp;
-			echo "$freq_cpu1on" > $freq_cpu1on_tmp;
-			echo "$freq_cpu1off" > $freq_cpu1off_tmp;
 			echo "$freq_up_brake" > $freq_up_brake_tmp;
 			echo "$trans_load_h0" > $trans_load_h0_tmp;
 			echo "$trans_load_l1" > $trans_load_l1_tmp;
@@ -440,9 +424,9 @@ MEMORY_TWEAKS()
 		echo "$dirty_background_ratio" > /proc/sys/vm/dirty_background_ratio; # default: 10
 		echo "$dirty_ratio" > /proc/sys/vm/dirty_ratio; # default: 20
 		echo "4" > /proc/sys/vm/min_free_order_shift; # default: 4
-		echo "0" > /proc/sys/vm/overcommit_memory; # default: 0
+		echo "1" > /proc/sys/vm/overcommit_memory; # default: 0
 		echo "50" > /proc/sys/vm/overcommit_ratio; # default: 50
-		echo "256 256" > /proc/sys/vm/lowmem_reserve_ratio;
+		echo "32 32" > /proc/sys/vm/lowmem_reserve_ratio;
 		echo "3" > /proc/sys/vm/page-cluster; # default: 3
 		echo "8192" > /proc/sys/vm/min_free_kbytes;
 
@@ -829,9 +813,9 @@ VFS_CACHE_PRESSURE()
 	local sys_vfs_cache="/proc/sys/vm/vfs_cache_pressure";
 
 	if [ "${state}" == "awake" ]; then
-		echo "20" > $sys_vfs_cache;
+		echo "200" > $sys_vfs_cache;
 	elif [ "${state}" == "sleep" ]; then
-		echo "50" > $sys_vfs_cache;
+		echo "20" > $sys_vfs_cache;
 	fi;
 
 	log -p i -t $FILE_NAME "*** VFS_CACHE_PRESSURE: ${state} ***";
@@ -990,9 +974,9 @@ KERNEL_SCHED()
 		sysctl -w kernel.sched_min_granularity_ns=750000 > /dev/null 2>&1;
 		sysctl -w kernel.sched_latency_ns=6000000 > /dev/null 2>&1;
 	elif [ "${state}" == "sleep" ]; then
-		sysctl -w kernel.sched_wakeup_granularity_ns=2000000 > /dev/null 2>&1;
-		sysctl -w kernel.sched_min_granularity_ns=1500000 > /dev/null 2>&1;
-		sysctl -w kernel.sched_latency_ns=12000000 > /dev/null 2>&1;
+		sysctl -w kernel.sched_wakeup_granularity_ns=1000000 > /dev/null 2>&1;
+		sysctl -w kernel.sched_min_granularity_ns=750000 > /dev/null 2>&1;
+		sysctl -w kernel.sched_latency_ns=6000000 > /dev/null 2>&1;
 	fi;
 
 	log -p i -t $FILE_NAME "*** KERNEL_SCHED ***: ${state}";
