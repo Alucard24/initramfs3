@@ -6,13 +6,16 @@ stop;
 # set busybox location
 BB=/sbin/busybox
 
+$BB chmod -R 777 /tmp/;
+$BB chmod 6755 /sbin/ext/*;
+
 # remount all partitions tweked settings
 for m in $($BB mount | grep ext[3-4] | cut -d " " -f3); do
 	$BB mount -o remount,noatime,nodiratime,noauto_da_alloc,barrier=0 $m;
 done;
 
 $BB mount -o remount,rw,nosuid,nodev,discard,journal_async_commit /cache;
-$BB mount -o remount,rw,nosuid,nodev,discard /data;
+$BB mount -o remount,rw,nosuid,nodev,discard,journal_async_commit /data;
 $BB mount -o remount,rw /system;
 
 $BB mount -t rootfs -o remount,rw rootfs;
@@ -28,10 +31,11 @@ $BB chown -R drm:drm /data/tombstones;
 # critical Permissions fix
 $BB chmod -R 0777 /dev/cpuctl/;
 $BB chmod -R 0777 /data/system/inputmethod/;
-$BB chmod -R 0777 /sys/devices/system/cpu/;
 $BB chown -R root:system /sys/devices/system/cpu/;
-$BB chmod -R 0777 /data/anr;
+$BB chmod -R 0777 /sys/devices/system/cpu/;
 $BB chown -R system:system /data/anr;
+$BB chmod -R 0777 /data/anr/;
+$BB chmod 444 /proc/cmdline;
 
 MIUI_JB=0;
 JELLY=0;
@@ -68,7 +72,7 @@ SDCARD_FIX()
 
 if [ -e /tmp/wrong_kernel ]; then
 	mv /res/images/wrong_kernel.png /res/images/icon_clockwork.png;
-	/sbin/choose_rom 0
+	/sbin/choose_rom 0;
 	sleep 15;
 	sync;
 	$BB rm -f /tmp/wrong_kernel;
