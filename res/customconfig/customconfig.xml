@@ -227,7 +227,7 @@
 		<seekBar description="No of samples to evaluate load to scale CPU Up. After cpu_up_rate samples are finished for a frequency, CPU scale-Up logic is executed. In other words - before scaling Up, cpu_up_rate*up_sample_time micro seconds are spend at a frequency. (Default: 10%)"
 			name="cpu_up_rate" action="generic_cortex /tmp/cpu_up_rate" unit="%" min="1" reversed="false" step="1" max="100"/>
 
-		<seekBar description="No of samples to evaluate load to scale CPU Down. After CPU_down_rate samples are finished for a frequency, CPU scale-Down logic is executed. In other words - before scaling Down, cpu_down_rate*down_sample_time micro seconds are spend at a frequency. (Default: 5%)"
+		<seekBar description="No of samples to evaluate load to scale CPU Down. After CPU_down_rate samples are finished for a frequency, CPU scale-Down logic is executed. In other words - before scaling Down, cpu_down_rate*down_sample_time micro seconds are spend at a frequency. (Default: 20%)"
 			name="cpu_down_rate" action="generic_cortex /tmp/cpu_down_rate" unit="%" min="1" reversed="false" step="1" max="100"/>
 
 	</settingsPane>
