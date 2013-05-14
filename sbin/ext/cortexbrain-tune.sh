@@ -507,11 +507,11 @@ CPU_GOV_TWEAKS()
 			echo "$up_threshold_at_min_freq" > $up_threshold_at_min_freq_tmp;
 			echo "$inc_cpu_load_at_min_freq" > $inc_cpu_load_at_min_freq_tmp;		
 			if [ "$IPA_CHECK" == 1 ]; then
-				if [ "$hotplug_enable" == 1 ] && [ $SYSTEM_GOVERNOR == "nightmare" ]; then					
+				if [ "$hotplug_enable" == 1 ] && [ $SYSTEM_GOVERNOR == "nightmare" ]; then
 					echo "0" > $sys_ipa_tmp;
 				fi;
 			else
-				if [ $SYSTEM_GOVERNOR != "nightmare" ] || [ "$hotplug_enable" == 0 ];
+				if [ $SYSTEM_GOVERNOR != "nightmare" ] || [ "$hotplug_enable" == 0 ]; then
 					echo "1" > $sys_ipa_tmp;
 				fi;
 			fi;
