@@ -38,8 +38,8 @@ PROFILE=$(cat ${DATA_DIR}/.active.profile);
 . ${DATA_DIR}/${PROFILE}.profile;
 
 # set initial vm.dirty vales
-echo "1000" > /proc/sys/vm/dirty_writeback_centisecs;
-echo "3000" > /proc/sys/vm/dirty_expire_centisecs;
+echo "200" > /proc/sys/vm/dirty_writeback_centisecs;
+echo "500" > /proc/sys/vm/dirty_expire_centisecs;
 
 # check if dumpsys exist in ROM
 if [ -e /system/bin/dumpsys ]; then
@@ -554,11 +554,11 @@ MEMORY_TWEAKS()
 		echo "$dirty_background_ratio" > /proc/sys/vm/dirty_background_ratio; # default: 10
 		echo "$dirty_ratio" > /proc/sys/vm/dirty_ratio; # default: 20
 		echo "4" > /proc/sys/vm/min_free_order_shift; # default: 4
-		echo "1" > /proc/sys/vm/overcommit_memory; # default: 0
+		echo "0" > /proc/sys/vm/overcommit_memory; # default: 0
 		echo "50" > /proc/sys/vm/overcommit_ratio; # default: 50
 		echo "32 32" > /proc/sys/vm/lowmem_reserve_ratio;
 		echo "3" > /proc/sys/vm/page-cluster; # default: 3
-		echo "4096" > /proc/sys/vm/min_free_kbytes;
+		echo "8192" > /proc/sys/vm/min_free_kbytes;
 
 		log -p i -t $FILE_NAME "*** MEMORY_TWEAKS ***: enabled";
 
