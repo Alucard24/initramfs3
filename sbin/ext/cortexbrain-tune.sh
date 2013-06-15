@@ -304,11 +304,6 @@ CPU_GOV_TWEAKS()
 	if [ "$cortexbrain_cpu" == on ]; then
 		local SYSTEM_GOVERNOR=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`;
 
-		local sampling_rate_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/sampling_rate";
-		if [ ! -e $sampling_rate_tmp ]; then
-			sampling_rate_tmp="/dev/null";
-		fi;
-
 		local cpu_up_rate_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/cpu_up_rate";
 		if [ ! -e $cpu_up_rate_tmp ]; then
 			cpu_up_rate_tmp="/dev/null";
@@ -471,7 +466,6 @@ CPU_GOV_TWEAKS()
 
 		# wake_boost-settings
 		if [ "$state" == "wake_boost" ]; then
-			echo "20000" > $sampling_rate_tmp;
 			echo "10" > $cpu_up_rate_tmp;
 			echo "10" > $cpu_down_rate_tmp;
 			echo "10" > $down_threshold_tmp;
@@ -479,10 +473,8 @@ CPU_GOV_TWEAKS()
 			echo "40" > $up_threshold_at_min_freq_tmp;
 			echo "100" > $freq_step_tmp;
 			echo "800000" > $freq_for_responsiveness_tmp;
-			echo "50000" > $sampling_rate_tmp;
 		# sleep-settings
 		elif [ "$state" == "sleep" ]; then
-			echo "$sampling_rate_sleep" > $sampling_rate_tmp;
 			echo "$cpu_up_rate_sleep" > $cpu_up_rate_tmp;
 			echo "$cpu_down_rate_sleep" > $cpu_down_rate_tmp;
 			echo "$up_threshold_sleep" > $up_threshold_tmp;
@@ -513,7 +505,6 @@ CPU_GOV_TWEAKS()
 			echo "$freq_up_brake_sleep" > $freq_up_brake_tmp;
 		# awake-settings
 		elif [ "$state" == "awake" ]; then
-			echo "$sampling_rate" > $sampling_rate_tmp;
 			echo "$cpu_up_rate" > $cpu_up_rate_tmp;
 			echo "$cpu_down_rate" > $cpu_down_rate_tmp;
 			echo "$up_threshold" > $up_threshold_tmp;
@@ -1235,10 +1226,6 @@ IO_SCHEDULER()
 		local sys_mmc1_scheduler_tmp="/sys/block/mmcblk1/queue/scheduler";
 		local tmp_scheduler="";
 
-		if [ -e $sys_mmc0_scheduler_tmp ]; then
-			sys_mmc0_scheduler_tmp="/dev/null";
-		fi;
-
 		if [ -e $sys_mmc1_scheduler_tmp ]; then
 			sys_mmc1_scheduler_tmp="/dev/null";
 		fi;
@@ -1257,13 +1244,12 @@ IO_SCHEDULER()
 			fi;
 		fi;
 
-		echo "$scheduler" > $sys_mmc0_scheduler_tmp;
-		echo "$scheduler" > $sys_mmc1_scheduler_tmp;
-
 		log -p i -t $FILE_NAME "*** IO_SCHEDULER: $state ***: done";
 
 		# set I/O Tweaks again ...
 		IO_TWEAKS;
+	else
+		log -p i -t $FILE_NAME "*** Cortex IO_SCHEDULER: Disabled ***";
 	fi;
 }
 
@@ -1284,7 +1270,9 @@ CPU_GOVERNOR()
 			fi;
 		fi;
 
-		log -p i -t $FILE_NAME "*** CPU_GOVERNOR: $state ***: done";
+		local USED_GOV_NOW=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor`;
+
+		log -p i -t $FILE_NAME "*** CPU_GOVERNOR: set $state GOV $USED_GOV_NOW ***: done";
 	else
 		log -p i -t $FILE_NAME "*** CPU_GOVERNOR: NO CHANGED ***: done";
 	fi;
@@ -1333,20 +1321,6 @@ CALL_STATE()
 VIBRATE_FIX()
 {
 	echo "$pwm_val" > /sys/vibrator/pwm_val;
-
-#	echo "$vibrator_level" > /sys/vibrator/vibrator_level;
-
-#	if [ "$vibrator_level" -eq "9" ]; then
-#		echo "100" > /sys/vibrator/pwm_val;
-#	elif [ "$vibrator_level" -eq "7" ]; then
-#		echo "75" > /sys/vibrator/pwm_val;
-#	elif [ "$vibrator_level" -eq "5" ]; then
-#		echo "50" > /sys/vibrator/pwm_val;
-#	elif [ "$vibrator_level" -eq "3" ]; then
-#		echo "25" > /sys/vibrator/pwm_val;
-#	elif [ "$vibrator_level" -eq "-1" ]; then
-#		echo "0" > /sys/vibrator/pwm_val;
-#	fi;
 
 	log -p i -t $FILE_NAME "*** VIBRATE_FIX: $pwm_val ***";
 }
@@ -1446,8 +1420,14 @@ SLEEP_MODE()
 		CROND_SAFETY;
 		SWAPPINESS;
 
+		# for devs use, if debug is on, then finish full sleep with usb connected
+		if [ "$android_logger" == debug ]; then
+			CHARGING=0;
+		else
+			CHARGING=`cat /sys/class/power_supply/battery/charging_source`;
+		fi;
+
 		# check if we powered by USB, if not sleep
-		CHARGING=`cat /sys/class/power_supply/battery/charging_source`;
 		if [ "$CHARGING" -eq "0" ]; then
 			CPU_GOVERNOR "sleep";
 			CENTRAL_CPU_FREQ "sleep_freq";
