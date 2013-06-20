@@ -153,7 +153,7 @@ KERNEL_TWEAKS()
 		if [ "$state" == "awake" ]; then
 			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
 			echo "0" > /proc/sys/vm/panic_on_oom;
-			echo "60" > /proc/sys/kernel/panic;
+			echo "120" > /proc/sys/kernel/panic;
 		elif [ "$state" == "sleep" ]; then
 			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
 			echo "0" > /proc/sys/vm/panic_on_oom;
@@ -161,7 +161,7 @@ KERNEL_TWEAKS()
 		else
 			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
 			echo "0" > /proc/sys/vm/panic_on_oom;
-			echo "60" > /proc/sys/kernel/panic;
+			echo "120" > /proc/sys/kernel/panic;
 		fi;
 
 		if [ "$cortexbrain_memory" == on ]; then
@@ -566,12 +566,11 @@ MEMORY_TWEAKS()
 		echo "$dirty_background_ratio" > /proc/sys/vm/dirty_background_ratio; # default: 10
 		echo "$dirty_ratio" > /proc/sys/vm/dirty_ratio; # default: 20
 		echo "4" > /proc/sys/vm/min_free_order_shift; # default: 4
-		echo "1" > /proc/sys/vm/overcommit_memory; # default: 1
-		echo "20" > /proc/sys/vm/overcommit_ratio; # default: 50
-		echo "32 32" > /proc/sys/vm/lowmem_reserve_ratio;
+		echo "0" > /proc/sys/vm/overcommit_memory; # default: 1
+		echo "100" > /proc/sys/vm/overcommit_ratio; # default: 50
 		echo "3" > /proc/sys/vm/page-cluster; # default: 3
-		echo "8192" > /proc/sys/vm/min_free_kbytes;
-		echo "8192" > /proc/sys/vm/mmap_min_addr;
+		echo "4096" > /proc/sys/vm/min_free_kbytes;
+		echo "32768" > /proc/sys/vm/mmap_min_addr;
 
 		log -p i -t $FILE_NAME "*** MEMORY_TWEAKS ***: enabled";
 
@@ -592,14 +591,14 @@ ENTROPY()
 
 	if [ "$state" == "awake" ]; then
 		if [ "$PROFILE" != "battery" ] || [ "$PROFILE" != "extreme_battery" ]; then
-			echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
+			echo "256" > /proc/sys/kernel/random/read_wakeup_threshold;
 			echo "256" > /proc/sys/kernel/random/write_wakeup_threshold;
 		else
-			echo "64" > /proc/sys/kernel/random/read_wakeup_threshold;
+			echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
 			echo "128" > /proc/sys/kernel/random/write_wakeup_threshold;
 		fi;
 	elif [ "$state" == "sleep" ]; then
-		echo "64" > /proc/sys/kernel/random/read_wakeup_threshold;
+		echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
 		echo "128" > /proc/sys/kernel/random/write_wakeup_threshold;
 	fi;
 
@@ -917,9 +916,9 @@ VFS_CACHE_PRESSURE()
 
 	if [ -e $sys_vfs_cache ]; then
 		if [ "$state" == "awake" ]; then
-			echo "200" > $sys_vfs_cache;
+			echo "50" > $sys_vfs_cache;
 		elif [ "$state" == "sleep" ]; then
-			echo "100" > $sys_vfs_cache;
+			echo "10" > $sys_vfs_cache;
 		fi;
 
 		log -p i -t $FILE_NAME "*** VFS_CACHE_PRESSURE: $state ***";
@@ -1232,26 +1231,26 @@ IO_SCHEDULER()
 		local sys_mmc0_scheduler_tmp="/sys/block/mmcblk0/queue/scheduler";
 		local sys_mmc1_scheduler_tmp="/sys/block/mmcblk1/queue/scheduler";
 		local tmp_scheduler="";
+		local new_scheduler="";
 
 		if [ -e $sys_mmc1_scheduler_tmp ]; then
 			sys_mmc1_scheduler_tmp="/dev/null";
 		fi;
 
-		tmp_scheduler=`cat $sys_mmc0_scheduler_tmp`;
-
 		if [ "$state" == "awake" ]; then
-			if [ "$tmp_scheduler" != "$scheduler" ]; then
-				echo "$scheduler" > $sys_mmc0_scheduler_tmp;
-				echo "$scheduler" > $sys_mmc1_scheduler_tmp;
-			fi;
+			new_scheduler=$scheduler;
 		elif [ "$state" == "sleep" ]; then
-			if [ "$tmp_scheduler" != "$sleep_scheduler" ]; then
-				echo "$sleep_scheduler" > $sys_mmc0_scheduler_tmp;
-				echo "$sleep_scheduler" > $sys_mmc1_scheduler_tmp;
-			fi;
+			new_scheduler=$sleep_scheduler
 		fi;
 
-		log -p i -t $FILE_NAME "*** IO_SCHEDULER: $state ***: done";
+		tmp_scheduler=`cat $sys_mmc0_scheduler_tmp`;
+
+		if [ "$tmp_scheduler" != "$new_scheduler" ]; then
+			echo "$new_scheduler" > $sys_mmc0_scheduler_tmp;
+			echo "$new_scheduler" > $sys_mmc1_scheduler_tmp;
+		fi;
+
+		log -p i -t $FILE_NAME "*** IO_SCHEDULER: $state - $new_scheduler ***: done";
 
 		# set I/O Tweaks again ...
 		IO_TWEAKS;
