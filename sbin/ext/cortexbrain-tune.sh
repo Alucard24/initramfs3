@@ -275,25 +275,32 @@ CPU_INTELLI_PLUG_TWEAKS()
 		local IPA_CHECK=`cat $intelli_plug_active_tmp`;
 
 		local hotplug_enable_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/hotplug_enable";
+		local gov_check="0";
+
 		if [ ! -e $hotplug_enable_tmp ]; then
 			hotplug_enable_tmp="/dev/null";
 		fi;
 
-		if [ "a$IPA_CHECK" == "a1" ]; then
-			if [ "$hotplug_enable" -eq "1" ] && [ "$SYSTEM_GOVERNOR" == "nightmare" ]; then
-				echo "0" > $intelli_plug_active_tmp;
-				echo "$hotplug_enable" > $hotplug_enable_tmp;
+		if [ "$SYSTEM_GOVERNOR" != "nightmare" ] && [ "$SYSTEM_GOVERNOR" != "darkness" ]; then
+			gov_check=1;
+		fi;
 
-				log -p i -t $FILE_NAME "*** CPU_INTELLI_PLUG ***: disabled";
+		if [ "a$IPA_CHECK" == "a1" ]; then
+			if [ "$hotplug_enable" -eq "1" ]; then
+				if [ "$SYSTEM_GOVERNOR" == "nightmare" ] || [ "$SYSTEM_GOVERNOR" == "darkness" ]; then
+					echo "0" > $intelli_plug_active_tmp;
+
+					log -p i -t $FILE_NAME "*** CPU_INTELLI_PLUG ***: disabled";
+				fi;
 			fi;
 		else
-			if [ "$hotplug_enable" -eq "0" ] || [ "$SYSTEM_GOVERNOR" != "nightmare" ]; then
+			if [ "$hotplug_enable" -eq "0" ] || [ "$gov_check" -eq "1" ]; then
 				echo "1" > $intelli_plug_active_tmp;
-				echo "$hotplug_enable" > $hotplug_enable_tmp;
 
 				log -p i -t $FILE_NAME "*** CPU_INTELLI_PLUG ***: enabled";
 			fi;
 		fi;
+		echo "$hotplug_enable" > $hotplug_enable_tmp;
 	fi;
 }
 
@@ -334,9 +341,9 @@ CPU_GOV_TWEAKS()
 			up_threshold_min_freq_tmp="/dev/null";
 		fi;
 
-		local soft_scal_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/soft_scal";
-		if [ ! -e $soft_scal_tmp ]; then
-			soft_scal_tmp="/dev/null";
+		local up_soft_scal_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/up_soft_scal";
+		if [ ! -e $up_soft_scal_tmp ]; then
+			up_soft_scal_tmp="/dev/null";
 		fi;
 
 		local inc_cpu_load_at_min_freq_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/inc_cpu_load_at_min_freq";
@@ -485,7 +492,7 @@ CPU_GOV_TWEAKS()
 			echo "$cpu_down_rate_sleep" > $cpu_down_rate_tmp;
 			echo "$up_threshold_sleep" > $up_threshold_tmp;
 			echo "$up_threshold_at_min_freq_sleep" > $up_threshold_at_min_freq_tmp;
-			echo "$soft_scal_sleep" > $soft_scal_tmp;
+			echo "$up_soft_scal_sleep" > $up_soft_scal_tmp;
 			echo "$inc_cpu_load_at_min_freq_sleep" > $inc_cpu_load_at_min_freq_tmp;
 			echo "$hotplug_freq_fst_sleep" > $hotplug_freq_fst_tmp;
 			echo "$hotplug_freq_snd_sleep" > $hotplug_freq_snd_tmp;
@@ -516,7 +523,7 @@ CPU_GOV_TWEAKS()
 			echo "$cpu_down_rate" > $cpu_down_rate_tmp;
 			echo "$up_threshold" > $up_threshold_tmp;
 			echo "$up_threshold_at_min_freq" > $up_threshold_at_min_freq_tmp;
-			echo "$soft_scal" > $soft_scal_tmp;
+			echo "$up_soft_scal" > $up_soft_scal_tmp;
 			echo "$inc_cpu_load_at_min_freq" > $inc_cpu_load_at_min_freq_tmp;
 			echo "$hotplug_freq_fst" > $hotplug_freq_fst_tmp;
 			echo "$hotplug_freq_snd" > $hotplug_freq_snd_tmp;
@@ -566,11 +573,11 @@ MEMORY_TWEAKS()
 		echo "$dirty_background_ratio" > /proc/sys/vm/dirty_background_ratio; # default: 10
 		echo "$dirty_ratio" > /proc/sys/vm/dirty_ratio; # default: 20
 		echo "4" > /proc/sys/vm/min_free_order_shift; # default: 4
-		echo "0" > /proc/sys/vm/overcommit_memory; # default: 1
-		echo "100" > /proc/sys/vm/overcommit_ratio; # default: 50
+		echo "1" > /proc/sys/vm/overcommit_memory; # default: 1
+		echo "950" > /proc/sys/vm/overcommit_ratio; # default: 50
 		echo "3" > /proc/sys/vm/page-cluster; # default: 3
-		echo "4096" > /proc/sys/vm/min_free_kbytes;
-		echo "32768" > /proc/sys/vm/mmap_min_addr;
+		echo "8192" > /proc/sys/vm/min_free_kbytes;
+		echo "16384" > /proc/sys/vm/mmap_min_addr;
 
 		log -p i -t $FILE_NAME "*** MEMORY_TWEAKS ***: enabled";
 
@@ -592,7 +599,7 @@ ENTROPY()
 	if [ "$state" == "awake" ]; then
 		if [ "$PROFILE" != "battery" ] || [ "$PROFILE" != "extreme_battery" ]; then
 			echo "256" > /proc/sys/kernel/random/read_wakeup_threshold;
-			echo "256" > /proc/sys/kernel/random/write_wakeup_threshold;
+			echo "512" > /proc/sys/kernel/random/write_wakeup_threshold;
 		else
 			echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
 			echo "128" > /proc/sys/kernel/random/write_wakeup_threshold;
