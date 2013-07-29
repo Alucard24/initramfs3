@@ -21,6 +21,9 @@ for i in $PIDOFINIT; do
 	echo "-600" > /proc/${i}/oom_score_adj;
 done;
 
+$BB mount -o remount,rw,noauto_da_alloc /data;
+$BB mount -o remount,rw,noauto_da_alloc /system;
+
 # allow user and admin to use all free mem.
 echo 0 > /proc/sys/vm/user_reserve_kbytes;
 echo 8192 > /proc/sys/vm/admin_reserve_kbytes;
@@ -304,6 +307,11 @@ chmod 666 /tmp/uci_done;
 	if [ -e /data/data/com.aokp.romcontrol/files/notification_wallpaper.jpg ]; then
 		chmod 777 /data/data/com.aokp.romcontrol/files/notification_wallpaper.jpg
 	fi;
+
+	# remount all partitions tweaked settings
+	for m in $($BB mount | grep ext[3-4] | cut -d " " -f1); do
+		$BB mount -o remount,rw,noauto_da_alloc,discard,barrier=1 $m;
+	done;
 )&
 
 (

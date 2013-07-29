@@ -7,16 +7,11 @@ stop;
 BB=/sbin/busybox
 
 $BB chmod -R 777 /tmp/;
-$BB chmod 6755 /sbin/ext/*;
+$BB chmod -R 6755 /sbin/ext/;
 
 mount -o remount,rw,nosuid,nodev /cache;
 mount -o remount,rw,nosuid,nodev /data;
 mount -o remount,rw /;
-
-# remount all partitions tweked settings
-for m in $(mount | grep ext[3-4] | cut -d " " -f1); do
-	mount -o remount,rw,noatime,nodiratime,noauto_da_alloc,discard,barrier=1 $m;
-done;
 
 # cleaning
 $BB rm -rf /cache/lost+found/* 2> /dev/null;
