@@ -21,9 +21,16 @@ for i in $PIDOFINIT; do
 	echo "-600" > /proc/${i}/oom_score_adj;
 done;
 
-$BB mount -o remount,rw,noauto_da_alloc /data;
-$BB mount -o remount,rw,noauto_da_alloc /system;
-$BB mount -o remount,rw /efs;
+if [ `cat /tmp/sec_rom_boot` -eq "1" ]; then
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /data;
+	$BB mount -o remount,rw,noauto_da_alloc /system;
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /efs;
+else
+	$BB mount -o remount,rw,noauto_da_alloc /data;
+	$BB mount -o remount,rw,noauto_da_alloc /system;
+	$BB mount -o remount,rw,noauto_da_alloc /preload;
+	$BB mount -o remount,rw,noauto_da_alloc /efs;
+fi;
 
 # allow user and admin to use all free mem.
 echo 0 > /proc/sys/vm/user_reserve_kbytes;
@@ -163,10 +170,6 @@ $BB chmod -R 755 /lib;
 		$BB insmod /lib/modules/usbserial.ko;
 		$BB insmod /lib/modules/ftdi_sio.ko;
 		$BB insmod /lib/modules/pl2303.ko;
-	fi;
-	if [ "$usbnet_module" == "on" ]; then
-		$BB insmod /lib/modules/usbnet.ko;
-		$BB insmod /lib/modules/asix.ko;
 	fi;
 	if [ "$cifs_module" == "on" ]; then
 		$BB insmod /lib/modules/cifs.ko;
