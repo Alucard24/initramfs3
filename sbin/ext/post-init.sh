@@ -21,6 +21,17 @@ for i in $PIDOFINIT; do
 	echo "-600" > /proc/${i}/oom_score_adj;
 done;
 
+if [ `cat /tmp/sec_rom_boot` -eq "1" ]; then
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /data;
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /efs;
+else
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /preload;
+fi;
+
+# allow user and admin to use all free mem.
+echo 0 > /proc/sys/vm/user_reserve_kbytes;
+echo 0 > /proc/sys/vm/admin_reserve_kbytes;
+
 if [ ! -d /data/.siyah ]; then
 	$BB mkdir -p /data/.siyah;
 fi;
@@ -48,14 +59,6 @@ $BB chmod -R 0777 /data/.siyah/;
 read_defaults;
 read_config;
 
-# HACK: we have problem on boot with stuck service GoogleBackupTransport if many apps installed
-# here i will rename the GoogleBackupTransport.apk to boot without it and then restore to prevent
-# system not responding popup on after boot.
-if [ -e /data/dalvik-cache/not_first_boot ]; then
-	mount -o remount,rw /system;
-	mv /system/app/GoogleBackupTransport.apk /system/app/GoogleBackupTransport.apk.off
-fi;
-
 # custom boot booster stage 1
 echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 
@@ -70,7 +73,7 @@ chmod 777 /tmp/cpu-voltage_group;
 
 VDD_INT=`cat /tmp/cpu-voltage_group | cut -c 24`;
 
-if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ] && [ "$VDD_INT" != "4" ]; then
+if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ]; then
 	if [ "$VDD_INT" -eq "1" ]; then
 		$BB sh /res/uci.sh cpu-voltage 1 1475;
 		$BB sh /res/uci.sh cpu-voltage 2 1450;
@@ -84,13 +87,13 @@ if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ] && [ "$VDD_INT" !
 		$BB sh /res/uci.sh cpu-voltage 10 1100;
 		$BB sh /res/uci.sh cpu-voltage 11 1075;
 		$BB sh /res/uci.sh cpu-voltage 12 1050;
-		$BB sh /res/uci.sh cpu-voltage 13 1000;
-		$BB sh /res/uci.sh cpu-voltage 14 1000;
+		$BB sh /res/uci.sh cpu-voltage 13 1250;
+		$BB sh /res/uci.sh cpu-voltage 14 1250;
 		$BB sh /res/uci.sh cpu-voltage 15 1000;
 		$BB sh /res/uci.sh cpu-voltage 16 1000;
 	elif [ "$VDD_INT" -eq "2" ]; then
 		$BB sh /res/uci.sh cpu-voltage 1 1450;
-		$BB sh /res/uci.sh cpu-voltage 2 1425;
+		$BB sh /res/uci.sh cpu-voltage 2 1400;
 		$BB sh /res/uci.sh cpu-voltage 3 1350;
 		$BB sh /res/uci.sh cpu-voltage 4 1325;
 		$BB sh /res/uci.sh cpu-voltage 5 1300;
@@ -98,16 +101,16 @@ if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ] && [ "$VDD_INT" !
 		$BB sh /res/uci.sh cpu-voltage 7 1200;
 		$BB sh /res/uci.sh cpu-voltage 8 1150;
 		$BB sh /res/uci.sh cpu-voltage 9 1100;
-		$BB sh /res/uci.sh cpu-voltage 10 1075;
-		$BB sh /res/uci.sh cpu-voltage 11 1050;
+		$BB sh /res/uci.sh cpu-voltage 10 1050;
+		$BB sh /res/uci.sh cpu-voltage 11 1025;
 		$BB sh /res/uci.sh cpu-voltage 12 1000;
-		$BB sh /res/uci.sh cpu-voltage 13 975;
-		$BB sh /res/uci.sh cpu-voltage 14 975;
+		$BB sh /res/uci.sh cpu-voltage 13 1000;
+		$BB sh /res/uci.sh cpu-voltage 14 1000;
 		$BB sh /res/uci.sh cpu-voltage 15 975;
 		$BB sh /res/uci.sh cpu-voltage 16 975;
-	elif [ "$VDD_INT" -eq "5" ]; then
+	elif [ "$VDD_INT" -eq "4" ]; then
 		$BB sh /res/uci.sh cpu-voltage 1 1400;
-		$BB sh /res/uci.sh cpu-voltage 2 1375;
+		$BB sh /res/uci.sh cpu-voltage 2 1350;
 		$BB sh /res/uci.sh cpu-voltage 3 1300;
 		$BB sh /res/uci.sh cpu-voltage 4 1275;
 		$BB sh /res/uci.sh cpu-voltage 5 1250;
@@ -115,8 +118,25 @@ if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ] && [ "$VDD_INT" !
 		$BB sh /res/uci.sh cpu-voltage 7 1150;
 		$BB sh /res/uci.sh cpu-voltage 8 1100;
 		$BB sh /res/uci.sh cpu-voltage 9 1050;
-		$BB sh /res/uci.sh cpu-voltage 10 1025;
+		$BB sh /res/uci.sh cpu-voltage 10 1000;
 		$BB sh /res/uci.sh cpu-voltage 11 1000;
+		$BB sh /res/uci.sh cpu-voltage 12 975;
+		$BB sh /res/uci.sh cpu-voltage 13 975;
+		$BB sh /res/uci.sh cpu-voltage 14 975;
+		$BB sh /res/uci.sh cpu-voltage 15 950;
+		$BB sh /res/uci.sh cpu-voltage 16 950;
+	elif [ "$VDD_INT" -eq "5" ]; then
+		$BB sh /res/uci.sh cpu-voltage 1 1375;
+		$BB sh /res/uci.sh cpu-voltage 2 1325;
+		$BB sh /res/uci.sh cpu-voltage 3 1275;
+		$BB sh /res/uci.sh cpu-voltage 4 1250;
+		$BB sh /res/uci.sh cpu-voltage 5 1225;
+		$BB sh /res/uci.sh cpu-voltage 6 1175;
+		$BB sh /res/uci.sh cpu-voltage 7 1125;
+		$BB sh /res/uci.sh cpu-voltage 8 1075;
+		$BB sh /res/uci.sh cpu-voltage 9 1025;
+		$BB sh /res/uci.sh cpu-voltage 10 975;
+		$BB sh /res/uci.sh cpu-voltage 11 975;
 		$BB sh /res/uci.sh cpu-voltage 12 950;
 		$BB sh /res/uci.sh cpu-voltage 13 950;
 		$BB sh /res/uci.sh cpu-voltage 14 950;
@@ -146,27 +166,35 @@ fi;
 $BB chmod -R 755 /lib;
 
 (
-	sleep 50;
+	sleep 40;
 	# order of modules load is important
-#	$BB insmod /lib/modules/j4fs.ko;
+#	$BB insmod /system/lib/modules/j4fs.ko;
 #	$BB mount -t j4fs /dev/block/mmcblk0p4 /mnt/.lfs
-	$BB insmod /lib/modules/Si4709_driver.ko;
 
 	if [ "$usbserial_module" == "on" ]; then
-		$BB insmod /lib/modules/usbserial.ko;
-		$BB insmod /lib/modules/ftdi_sio.ko;
-		$BB insmod /lib/modules/pl2303.ko;
-	fi;
-	if [ "$usbnet_module" == "on" ]; then
-		$BB insmod /lib/modules/usbnet.ko;
-		$BB insmod /lib/modules/asix.ko;
+		$BB insmod /system/lib/modules/usbserial.ko;
+		$BB insmod /system/lib/modules/ftdi_sio.ko;
+		$BB insmod /system/lib/modules/pl2303.ko;
 	fi;
 	if [ "$cifs_module" == "on" ]; then
-		$BB insmod /lib/modules/cifs.ko;
+		$BB insmod /system/lib/modules/cifs.ko;
 	fi;
 	if [ "$eds_module" == "on" ]; then
-		$BB insmod /lib/modules/eds.ko;
+		$BB insmod /system/lib/modules/eds.ko;
 	fi;
+
+	# remount external sdcard if exist
+#	EXFAT_CHECK=`cat /proc/self/mounts | grep "exfat" | wc -l`;
+#	if [ "$EXFAT_CHECK" -eq "1" ]; then
+#		if [ `cat /tmp/sammy_rom` -eq "0" ]; then
+#			umount /storage/sdcard1;
+#			$BB mount -t exfat /dev/block/vold/179:9 /storage/sdcard1;
+#		else
+#			umount /storage/extSdCard
+#			$BB mount -t exfat /dev/block/vold/179:9 /storage/extSdCard;
+#		fi;
+#	fi;
+
 )&
 
 # some nice thing for dev
@@ -179,7 +207,7 @@ echo "0" > /proc/sys/kernel/kptr_restrict;
 # Cortex parent should be ROOT/INIT and not STweaks
 nohup /sbin/ext/cortexbrain-tune.sh;
 CORTEX=`pgrep -f "/sbin/ext/cortexbrain-tune.sh"`;
-echo "-1000" > /proc/$CORTEX/oom_score_adj;
+echo "-900" > /proc/$CORTEX/oom_score_adj;
 
 # enable screen color mode
 echo "1" > /sys/devices/platform/samsung-pd.2/mdnie/mdnie/mdnie/user_mode;
@@ -191,10 +219,8 @@ if [ ! -d /system/etc/init.d ]; then
 fi;
 
 (
-	MIUI_JB=0;
-	[ "`$BB grep -i cMIUI /system/build.prop`" ] && MIUI_JB=1;
-
-	if [ $init_d == on ] || [ "$MIUI_JB" -eq "1" ]; then
+	JBMIUI=`ls /system/framework/framework-miui-res.apk | wc -l`;
+	if [ "$init_d" == "on" ] || [ "$JBMIUI" -eq "1" ]; then
 		$BB sh /sbin/ext/run-init-scripts.sh;
 	fi;
 )&
@@ -244,14 +270,6 @@ chmod 666 /tmp/uci_done;
 		COUNTER=$(($COUNTER+1));
 	done;
 
-	# give home launcher, oom protection
-	ACORE_APPS=`pgrep acore`;
-	if [ "a$ACORE_APPS" != "a" ]; then
-		for c in `pgrep acore`; do
-			echo "-900" > /proc/${c}/oom_score_adj;
-		done;
-	fi;
-
 	# Mount Sec/Pri ROM DATA on Boot, we need to wait till sdcard is mounted.
 	if [ `cat /tmp/pri_rom_boot` -eq "1" ]; then
 		if [ -e /sdcard/.secondrom/data.img ] || [ -e /storage/sdcard0/.secondrom/data.img ]; then
@@ -276,8 +294,11 @@ chmod 666 /tmp/uci_done;
 	elif [ `cat /tmp/sec_rom_boot` -eq "1" ]; then
 		mount -o remount,rw /
 		mkdir /data_pri_rom;
+		mkdir /system_pri_rom;
 		chmod 777 /data_pri_rom;
+		chmod 777 /system_pri_rom;
 		mount -t ext4 /dev/block/mmcblk0p10 /data_pri_rom;
+		mount -t ext4 /dev/block/mmcblk0p9 /system_pri_rom;
 	fi;
 
 	# restore normal freq
@@ -288,18 +309,29 @@ chmod 666 /tmp/uci_done;
 		echo "$scaling_max_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 	fi;
 
-	# HACK: restore GoogleBackupTransport.apk after boot.
-	if [ -e /data/dalvik-cache/not_first_boot ]; then
-		mv /system/app/GoogleBackupTransport.apk.off /system/app/GoogleBackupTransport.apk
-	else
-		touch /data/dalvik-cache/not_first_boot;
-		chmod 777 /data/dalvik-cache/not_first_boot;
-	fi;
-
 	# ROOTBOX fix notification_wallpaper
 	if [ -e /data/data/com.aokp.romcontrol/files/notification_wallpaper.jpg ]; then
 		chmod 777 /data/data/com.aokp.romcontrol/files/notification_wallpaper.jpg
 	fi;
+
+	# tweaks all the dm partitions that hold moved to sdcard apps
+	sleep 40;
+	DM_COUNT=`ls -d /sys/block/dm* | wc -l`;
+	if [ "$DM_COUNT" -gt "0" ]; then
+		for d in $($BB mount | grep dm | cut -d " " -f1 | grep -v vold); do
+			$BB mount -o remount,ro,noauto_da_alloc $d;
+		done;
+
+		DM=`ls -d /sys/block/dm*`;
+		for i in ${DM}; do
+			echo "0" > ${i}/queue/rotational;
+			echo "0" > ${i}/queue/iostats;
+		done;
+	fi;
+
+	# script finish here, so let me know when
+        echo "Done Booting" > /data/dm-boot-check;
+        date >> /data/dm-boot-check;
 )&
 
 (
@@ -316,7 +348,7 @@ chmod 666 /tmp/uci_done;
 	pkill -f "com.gokhanmoral.stweaks.app";
 	nohup $BB sh /res/uci.sh restore;
 	UCI_PID=`pgrep -f "/res/uci.sh"`;
-	echo "-1000" > /proc/$UCI_PID/oom_score_adj;
+	echo "-800" > /proc/$UCI_PID/oom_score_adj;
 	echo "1" > /tmp/uci_done;
 
 	# restore all the PUSH Button Actions back to there location
@@ -337,11 +369,8 @@ chmod 666 /tmp/uci_done;
 
 	# JB Sound Bug fix, 3 push VOL DOWN, 4 push VOL UP. and sound is fixed.
 
-	MIUI_JB=0;
-	JELLY=0;
-	[ "`$BB grep -i cMIUI /system/build.prop`" ] && MIUI_JB=1;
-	[ -f /system/lib/ssl/engines/libkeystore.so ] && JELLY=1;
-	if [ "$JELLY" -eq "1" ] || [ "$MIUI_JB" -eq "1" ]; then
+	CM_AOKP_10_JB=`ls /system/bin/wfd | wc -l`;
+	if [ "$CM_AOKP_10_JB" -eq "1" ]; then
 		if [ "$jb_sound_fix" == "on" ]; then
 			input keyevent 25
 			input keyevent 25
@@ -351,22 +380,13 @@ chmod 666 /tmp/uci_done;
 			input keyevent 24
 			input keyevent 24
 		fi;
+	else
+		echo "jb_sound_fix not used";
 	fi;
 
 	# ###############################################################
 	# I/O related tweaks
 	# ###############################################################
-
-	DM=`ls -d /sys/block/dm*`;
-	for i in ${DM}; do
-		if [ -e $i/queue/rotational ]; then
-			echo "0" > ${i}/queue/rotational;
-		fi;
-
-		if [ -e $i/queue/iostats ]; then
-			echo "0" > ${i}/queue/iostats;
-		fi;
-	done;
 
 	mount -o remount,rw /system;
 	mount -o remount,rw /;
@@ -377,8 +397,4 @@ chmod 666 /tmp/uci_done;
 	# correct oom tuning, if changed by apps/rom
 	$BB sh /res/uci.sh oom_config_screen_on $oom_config_screen_on;
 	$BB sh /res/uci.sh oom_config_screen_off $oom_config_screen_off;
-
-	echo "Done Booting" > /data/dm-boot-check;
-	date >> /data/dm-boot-check;
 )&
-
