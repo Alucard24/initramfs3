@@ -27,8 +27,11 @@ DATA_DIR=/data/.siyah;
 WAS_IN_SLEEP_MODE=1;
 NOW_CALL_STATE=0;
 USB_POWER=0;
+TELE_DATA=init;
 # read sd-card size, set via boot
 SDCARD_SIZE=`cat /tmp/sdcard_size`;
+EXTERNAL_SDCARD_CM=`mount | grep "/storage/sdcard1" | wc -l`;
+EXTERNAL_SDCARD_STOCK=`mount | grep "/storage/extSdCard" | wc -l`;
 
 # ==============================================================
 # INITIATE
@@ -146,33 +149,21 @@ IO_TWEAKS;
 # ==============================================================
 KERNEL_TWEAKS()
 {
-	local state="$1";
-
 	if [ "$cortexbrain_kernel_tweaks" == on ]; then
+		echo "0" > /proc/sys/vm/oom_kill_allocating_task;
+		echo "0" > /proc/sys/vm/panic_on_oom;
+		echo "30" > /proc/sys/kernel/panic;
 
-		if [ "$state" == "awake" ]; then
-			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
-			echo "0" > /proc/sys/vm/panic_on_oom;
-			echo "120" > /proc/sys/kernel/panic;
-		elif [ "$state" == "sleep" ]; then
-			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
-			echo "0" > /proc/sys/vm/panic_on_oom;
-			echo "90" > /proc/sys/kernel/panic;
-		else
-			echo "0" > /proc/sys/vm/oom_kill_allocating_task;
-			echo "0" > /proc/sys/vm/panic_on_oom;
-			echo "120" > /proc/sys/kernel/panic;
-		fi;
-
-		if [ "$cortexbrain_memory" == on ]; then
-			echo "32 32" > /proc/sys/vm/lowmem_reserve_ratio;
-		fi;
-
-		log -p i -t $FILE_NAME "*** KERNEL_TWEAKS ***: $state ***: enabled";
-
-		return 1;
+		log -p i -t $FILE_NAME "*** KERNEL_TWEAKS ***: enabled";
 	else
-		return 0;
+		echo "kernel_tweaks disabled";
+	fi;
+	if [ "$cortexbrain_memory" == on ]; then
+		echo "32 32" > /proc/sys/vm/lowmem_reserve_ratio;
+
+		log -p i -t $FILE_NAME "*** MEMORY_TWEAKS ***: enabled";
+	else
+		echo "memory_tweaks disabled";
 	fi;
 }
 KERNEL_TWEAKS;
@@ -189,10 +180,8 @@ SYSTEM_TWEAKS()
 		setprop profiler.force_disable_ulog 1;
 
 		log -p i -t $FILE_NAME "*** SYSTEM_TWEAKS ***: enabled";
-
-		return 1;
 	else
-		return 0;
+		echo "system_tweaks disabled";
 	fi;
 }
 SYSTEM_TWEAKS;
@@ -203,12 +192,11 @@ SYSTEM_TWEAKS;
 BATTERY_TWEAKS()
 {
 	if [ "$cortexbrain_battery" == on ]; then
-
 		# battery-calibration if battery is full
 		local LEVEL=`cat /sys/class/power_supply/battery/capacity`;
 		local CURR_ADC=`cat /sys/class/power_supply/battery/batt_current_adc`;
 		local BATTFULL=`cat /sys/class/power_supply/battery/batt_full_check`;
-		loacl i="";
+		local i="";
 		local bus="";
 
 		log -p i -t $FILE_NAME "*** BATTERY - LEVEL: $LEVEL - CUR: $CURR_ADC ***";
@@ -356,12 +344,12 @@ CPU_GOV_TWEAKS()
 			hotplug_freq_snd_tmp="/dev/null";
 		fi;
 
-		local up_load_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/up_load";
+		local up_load_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/hotplug_load_1_1";
 		if [ ! -e $up_load_tmp ]; then
 			up_load_tmp="/dev/null";
 		fi;
 
-		local down_load_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/down_load";
+		local down_load_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/hotplug_load_2_0";
 		if [ ! -e $down_load_tmp ]; then
 			down_load_tmp="/dev/null";
 		fi;
@@ -451,9 +439,9 @@ CPU_GOV_TWEAKS()
 			freq_up_brake_tmp="/dev/null";
 		fi;
 
-		local onecoresuspend_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/onecoresuspend";
-		if [ ! -e $onecoresuspend_tmp ]; then
-			onecoresuspend_tmp="/dev/null";
+		local maxcoreslimit_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/maxcoreslimit";
+		if [ ! -e $maxcoreslimit_tmp ]; then
+			maxcoreslimit_tmp="/dev/null";
 		fi;
 
 		local force_freqs_step_tmp="/sys/devices/system/cpu/cpufreq/$SYSTEM_GOVERNOR/force_freqs_step";
@@ -559,7 +547,7 @@ CPU_GOV_TWEAKS()
 			echo "$dec_cpu_load_sleep" > $dec_cpu_load_tmp;
 			echo "$freq_up_brake_at_min_freq_sleep" > $freq_up_brake_at_min_freq_tmp;
 			echo "$freq_up_brake_sleep" > $freq_up_brake_tmp;
-			echo "1" > $onecoresuspend_tmp;
+			echo "1" > $maxcoreslimit_tmp;
 			echo "$force_freqs_step" > $force_freqs_step_tmp;
 			echo "$sampling_down_max_mom_sleep" > $sampling_down_max_mom_tmp;
 			echo "$sampling_down_mom_sens_sleep" > $sampling_down_mom_sens_tmp;
@@ -601,7 +589,7 @@ CPU_GOV_TWEAKS()
 			echo "$dec_cpu_load" > $dec_cpu_load_tmp;
 			echo "$freq_up_brake_at_min_freq" > $freq_up_brake_at_min_freq_tmp;
 			echo "$freq_up_brake" > $freq_up_brake_tmp;
-			echo "0" > $onecoresuspend_tmp;
+			echo "2" > $maxcoreslimit_tmp;
 			echo "$force_freqs_step" > $force_freqs_step_tmp;
 			echo "$sampling_down_max_mom" > $sampling_down_max_mom_tmp;
 			echo "$sampling_down_mom_sens" > $sampling_down_mom_sens_tmp;
@@ -668,12 +656,12 @@ ENTROPY()
 			echo "256" > /proc/sys/kernel/random/read_wakeup_threshold;
 			echo "512" > /proc/sys/kernel/random/write_wakeup_threshold;
 		else
-			echo "64" > /proc/sys/kernel/random/read_wakeup_threshold;
-			echo "128" > /proc/sys/kernel/random/write_wakeup_threshold;
+			echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
+			echo "256" > /proc/sys/kernel/random/write_wakeup_threshold;
 		fi;
 	elif [ "$state" == "sleep" ]; then
-		echo "64" > /proc/sys/kernel/random/read_wakeup_threshold;
-		echo "128" > /proc/sys/kernel/random/write_wakeup_threshold;
+		echo "128" > /proc/sys/kernel/random/read_wakeup_threshold;
+		echo "256" > /proc/sys/kernel/random/write_wakeup_threshold;
 	fi;
 
 	log -p i -t $FILE_NAME "*** ENTROPY ***: $state - $PROFILE";
@@ -924,20 +912,16 @@ MOBILE_DATA()
 LOGGER()
 {
 	local state="$1";
-	local dev_log_sleep="/dev/log-sleep";
-	local dev_log="/dev/log";
 
 	if [ "$state" == "awake" ]; then
 		if [ "$android_logger" == auto ] || [ "$android_logger" == debug ]; then
-			if [ -e $dev_log_sleep ] && [ ! -e $dev_log ]; then
-				mv $dev_log_sleep $dev_log
-			fi;
+			echo "1" > /sys/module/logger/parameters/log_enabled;
+		elif [ "$android_logger" == disabled ]; then
+			echo "0" > /sys/module/logger/parameters/log_enabled;
 		fi;
 	elif [ "$state" == "sleep" ]; then
 		if [ "$android_logger" == auto ] || [ "$android_logger" == disabled ]; then
-			if [ -e $dev_log ]; then
-				mv $dev_log $dev_log_sleep;
-			fi;
+			echo "0" > /sys/module/logger/parameters/log_enabled;
 		fi;
 	fi;
 
@@ -986,7 +970,7 @@ MALI_TIMEOUT()
 	elif [ "$state" == "sleep" ]; then
 		echo "1000" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
 	elif [ "$state" == "wake_boost" ]; then
-		echo "250" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
+		echo "200" > /sys/module/mali/parameters/mali_gpu_utilization_timeout;
 	fi;
 
 	log -p i -t $FILE_NAME "*** MALI_TIMEOUT: $state ***";
@@ -999,7 +983,7 @@ BUS_THRESHOLD()
 	if [ "$state" == "awake" ]; then
 		echo "$busfreq_up_threshold" > /sys/devices/system/cpu/cpufreq/busfreq_up_threshold;
 	elif [ "$state" == "sleep" ]; then
-		echo "30" > /sys/devices/system/cpu/cpufreq/busfreq_up_threshold;
+		echo "50" > /sys/devices/system/cpu/cpufreq/busfreq_up_threshold;
 	elif [ "$state" == "wake_boost" ]; then
 		echo "23" > /sys/devices/system/cpu/cpufreq/busfreq_up_threshold;
 	fi;
@@ -1470,6 +1454,30 @@ VIBRATE_FIX()
 	log -p i -t $FILE_NAME "*** VIBRATE_FIX: $pwm_val ***";
 }
 
+MOUNT_FIX()
+{
+	local CHECK_SYSTEM=`mount | grep /system | grep ro | wc -l`;
+	local CHECK_DATA=`mount | grep /data | cut -c 26-27 | grep ro | grep -v ec | wc -l`;
+	local PRELOAD_CHECK=`mount | grep /preload | grep ro | wc -l`;
+
+	if [ "$CHECK_SYSTEM" -eq "1" ]; then
+		mount -o remount,rw /system;
+	fi;
+	if [ "$CHECK_DATA" -eq "1" ]; then
+		mount -o remount,rw /data;
+	fi;
+	if [ "$PRELOAD_CHECK" -eq "1" ]; then
+		mount -o remount,rw /preload;
+	fi;
+	if [ "$EXTERNAL_SDCARD_CM" -eq "1" ]; then
+		mount -o remount,rw,nosuid,nodev,noexec /storage/sdcard1;
+	elif [ "$EXTERNAL_SDCARD_STOCK" -eq "1" ]; then
+		mount -o remount,rw,nosuid,nodev,noexec /storage/extSdCard;
+	fi;
+
+	mount -o remount,rw,nosuid,nodev,noexec /storage/sdcard0;
+}
+
 # ==============================================================
 # TWEAKS: if Screen-ON
 # ==============================================================
@@ -1497,7 +1505,6 @@ AWAKE_MODE()
 			MALI_TIMEOUT "wake_boost";
 			BUS_THRESHOLD "wake_boost";
 #			KERNEL_SCHED "awake";
-			KERNEL_TWEAKS "awake";
 			NET "awake";
 			MOBILE_DATA "awake";
 			WIFI "awake";
@@ -1512,6 +1519,7 @@ AWAKE_MODE()
 			MALI_TIMEOUT "awake";
 			BUS_THRESHOLD "awake";
 			ECO_TWEAKS;
+			MOUNT_FIX;
 		else
 			# Was powered by USB, and half sleep
 			ENABLEMASK "awake";
@@ -1519,15 +1527,15 @@ AWAKE_MODE()
 			MALI_TIMEOUT "wake_boost";
 			GESTURES "awake";
 			BOOST_DELAY;
-			BATTERY_TWEAKS;
 			MALI_TIMEOUT "awake";
 			CENTRAL_CPU_FREQ "awake_normal";
 			ECO_TWEAKS;
+			MOUNT_FIX;
 			USB_POWER=0;
 
 			log -p i -t $FILE_NAME "*** USB_POWER_WAKE: done ***";
 		fi;
-		#Didn't sleep, and was not powered by USB
+		# Didn't sleep, and was not powered by USB
 	fi;
 }
 
@@ -1560,7 +1568,6 @@ SLEEP_MODE()
 		CENTRAL_CPU_FREQ "standby_freq";
 		MALI_TIMEOUT "sleep";
 		GESTURES "sleep";
-		BATTERY_TWEAKS;
 		BLN_CORRECTION;
 		CROND_SAFETY;
 		SWAPPINESS;
@@ -1584,11 +1591,11 @@ SLEEP_MODE()
 			ENTROPY "sleep";
 			NET "sleep";
 			WIFI "sleep";
+			BATTERY_TWEAKS;
 			MOBILE_DATA "sleep";
 			IPV6;
 			TWEAK_HOTPLUG_ECO "sleep";
 			VFS_CACHE_PRESSURE "sleep";
-			KERNEL_TWEAKS "sleep";
 
 			log -p i -t $FILE_NAME "*** SLEEP mode ***";
 
