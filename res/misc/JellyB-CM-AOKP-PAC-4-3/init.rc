@@ -4,11 +4,12 @@
 # This is a common source of Android security bugs.
 #
 
-# THIS INIT.RC is FOR CM/AOKP 10.1 JB ROM!
+# THIS INIT.RC is FOR CM/AOKP 10.2 JB ROM!
 
 import /init.usb.rc
 import /init.smdk4210.rc
 import /init.trace.rc
+#import /init.carrier.rc
 import /init.smdk4210.dm_kernel.rc
 
 on early-init
@@ -23,11 +24,8 @@ on early-init
 
 # create mountpoints
     mkdir /mnt 0775 root system
-    mkdir /storage 0050 root sdcard_r
-    # Create mountpoint so Dalvik can mark as slave in zygotes.
-    mount tmpfs tmpfs /storage mode=0050,uid=0,gid=1028
 
-# Allow system UID to setenforce and set booleans.
+    # Allow system UID to setenforce and set booleans.
     chown system system /selinux/enforce
     chown system system /sys/fs/selinux/enforce
     chown -R system system /selinux/booleans
@@ -51,7 +49,7 @@ loglevel 3
     export ANDROID_STORAGE /storage
     export ASEC_MOUNTPOINT /mnt/asec
     export LOOP_MOUNTPOINT /mnt/obb
-    export BOOTCLASSPATH /system/framework/core.jar:/system/framework/core-junit.jar:/system/framework/bouncycastle.jar:/system/framework/ext.jar:/system/framework/framework.jar:/system/framework/telephony-common.jar:/system/framework/mms-common.jar:/system/framework/android.policy.jar:/system/framework/services.jar:/system/framework/apache-xml.jar
+    export BOOTCLASSPATH /system/framework/core.jar:/system/framework/core-junit.jar:/system/framework/bouncycastle.jar:/system/framework/ext.jar:/system/framework/framework.jar:/system/framework/framework-pac.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/mms-common.jar:/system/framework/android.policy.jar:/system/framework/services.jar:/system/framework/apache-xml.jar:/system/framework/telephony-msim.jar   
     export TERMINFO /system/etc/terminfo
     export TERM linux
 
@@ -475,7 +473,7 @@ service ril-daemon /system/bin/rild
     socket rild stream 660 root radio
     socket rild-debug stream 660 radio system
     user root
-    group radio cache inet misc audio sdcard_r sdcard_rw qcom_oncrpc qcom_diag log
+    group radio cache inet misc audio sdcard_rw qcom_oncrpc qcom_diag log
 
 service surfaceflinger /system/bin/surfaceflinger
     class main
@@ -533,7 +531,6 @@ service keystore /system/bin/keystore /data/misc/keystore
     class main
     user keystore
     group keystore drmrpc
-    socket keystore stream 666
 
 service dumpstate /system/bin/dumpstate -s
     class main

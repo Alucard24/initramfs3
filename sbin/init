@@ -9,7 +9,7 @@ if [ -e /sys/devices/virtual/sec/sec_key/set_homekey ]; then
 	echo 102 > /sys/devices/virtual/sec/sec_key/set_homekey;
 fi;
 
-# set "/" rw
+# mount root as rw
 $BB mount -t rootfs -o remount,rw rootfs;
 
 if $BB grep -q bootmode=2 /proc/cmdline; then
@@ -411,10 +411,10 @@ PARTITION_TUNING()
 PARTITION_TUNING;
 
 # mounting preloaded partition
-$BB mount -t ext4 -o rw,noauto_da_alloc,journal_async_commit,discard /dev/block/mmcblk0p12 /preload;
+$BB mount -t ext4 -o rw,noauto_da_alloc,journal_async_commit /dev/block/mmcblk0p12 /preload;
 
 # mounting system partition
-$BB mount -t ext4 -o rw,noauto_da_alloc,journal_async_commit,discard /res/dev/system /system;
+$BB mount -t ext4 -o rw,noauto_da_alloc,journal_async_commit /res/dev/system /system;
 
 # fixing second rom partitions
 if [ "$SECONDROM" -eq "1" ]; then
@@ -540,7 +540,9 @@ JBSAMMY=`ls /system/lib/libSamsungAnimation.so | wc -l`;
 JBSAMMY2=`ls /system/lib/lib_Samsung_Resampler.so | wc -l`;
 JBMIUI=`ls /system/framework/framework-miui-res.apk | wc -l`;
 CM_AOKP_10_JB=`ls /system/bin/wfd | wc -l`;
-CM_AOKP_10_2_JB=`$BB cat /system/build.prop | $BB grep "ro.build.version.release=4.3" | wc -l`;
+CM_AOKP_4_3_JB=`$BB cat /system/build.prop | $BB grep "ro.build.version.release=4.3" | wc -l`;
+CM_AOKP_4_3_1_JB=`$BB cat /system/build.prop | $BB grep "ro.build.version.release=4.3.1" | wc -l`;
+CM_AOKP_4_3_1_JB_PAC=`ls /system/framework/framework-pac.jar | wc -l`;
 
 USER_ACTIONS()
 {
@@ -548,7 +550,7 @@ USER_ACTIONS()
 		stop adbd;
 		$BB cp -a /sbin/adbd.jb /sbin/adbd;
 		$BB chmod 755 /sbin/adbd;
-	elif [ "$CM_AOKP_10_2_JB" -eq "1" ]; then
+	elif [ "$CM_AOKP_4_3_JB" -eq "1" ] || [ "$CM_AOKP_4_3_1_JB" -eq "1" ]; then
 		stop adbd;
 		$BB cp -a /sbin/adbd.cm10.2 /sbin/adbd;
 		$BB chmod 755 /sbin/adbd;
@@ -600,6 +602,15 @@ POWER_SQL_JB()
 {
 	$BB cp -a /res/misc/sql/jb/libsqlite.so /system/lib/libsqlite.so;
 	$BB cp -a /res/misc/sql/jb/sqlite3 /system/xbin/sqlite3;
+	$BB chmod 755 /system/lib/libsqlite.so;
+	$BB chmod 755 /system/xbin/sqlite3;
+	$BB rm -rf /res/misc/sql/;
+}
+
+POWER_SQL_JB_4_3()
+{
+	$BB cp -a /res/misc/sql/jb-4-3/libsqlite.so /system/lib/libsqlite.so;
+	$BB cp -a /res/misc/sql/jb-4-3/sqlite3 /system/xbin/sqlite3;
 	$BB chmod 755 /system/lib/libsqlite.so;
 	$BB chmod 755 /system/xbin/sqlite3;
 	$BB rm -rf /res/misc/sql/;
@@ -660,10 +671,14 @@ if [ "$JBSAMMY" -eq "1" ] || [ "$JBSAMMY2" -eq "1" ] || [ "$JBMIUI" -eq "1" ]; t
 
 	SECROM_FUNCTION_AOSP;
 
-elif [ "$CM_AOKP_10_2_JB" -eq "1" ]; then
+elif [ "$CM_AOKP_4_3_JB" -eq "1" ] || [ "$CM_AOKP_4_3_1_JB" -eq "1" ]; then
 	echo "3" > /proc/sys/kernel/rom_feature_set;
+	# Injecting JB Modded by Dorimanx and Fusionjack, SUPER libsqlite!
+	POWER_SQL_JB_4_3;
 	$BB cp -a /res/misc/JellyB-CM-AOKP-10.2/* /;
-	touch /tmp/cm10.1-installed;
+	if [ "$CM_AOKP_4_3_1_JB_PAC" -eq "1" ]; then
+		$BB cp -a res/misc/JellyB-CM-AOKP-PAC-4-3/* /;
+	fi;
 
 	SECROM_FUNCTION_AOSP;
 
@@ -672,7 +687,7 @@ elif [ "$CM_AOKP_10_JB" -eq "1" ]; then
 	POWER_SQL_JB;
 	echo "3" > /proc/sys/kernel/rom_feature_set;
 	$BB cp -a /res/misc/JellyB-CM-AOKP-10.1/* /;
-	touch /tmp/cm10.1-installed;
+	echo "1" > /tmp/cm10.1-installed;
 
 	SECROM_FUNCTION_AOSP;
 else

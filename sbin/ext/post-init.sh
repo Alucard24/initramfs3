@@ -5,6 +5,18 @@ BB=/sbin/busybox
 # first mod the partitions then boot
 $BB sh /sbin/ext/system_tune_on_init.sh;
 
+ROOT_RW()
+{
+	$BB mount -o remount,rw /;
+}
+ROOT_RW;
+
+# fix owners on critical folders
+$BB chown -R root:root /tmp;
+$BB chown -R root:root /res;
+$BB chown -R root:root /sbin;
+$BB chown -R root:root /lib;
+
 # oom and mem perm fix, we have auto adj code, do not allow changes in adj
 $BB chmod 777 /sys/module/lowmemorykiller/parameters/cost;
 $BB chmod 444 /sys/module/lowmemorykiller/parameters/adj;
@@ -22,28 +34,52 @@ for i in $PIDOFINIT; do
 done;
 
 if [ `cat /tmp/sec_rom_boot` -eq "1" ]; then
-	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit,discard /data;
-	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit,discard /efs;
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /data;
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /efs;
+	$BB mount -o remount,rw /
+	mkdir /data_pri_rom;
+	mkdir /system_pri_rom;
+	chmod 777 /data_pri_rom;
+	chmod 777 /system_pri_rom;
+	$BB mount -t ext4 /dev/block/mmcblk0p10 /data_pri_rom;
+	$BB mount -t ext4 /dev/block/mmcblk0p9 /system_pri_rom;
+else
+	$BB mount -o remount,rw,noauto_da_alloc,journal_async_commit /preload;
 fi;
 
 # allow user and admin to use all free mem.
 echo 0 > /proc/sys/vm/user_reserve_kbytes;
-echo 0 > /proc/sys/vm/admin_reserve_kbytes;
+echo 8192 > /proc/sys/vm/admin_reserve_kbytes;
 
 if [ ! -d /data/.siyah ]; then
 	$BB mkdir -p /data/.siyah;
 fi;
+
+# get rid of siyah in kernel name
+CHECK_VER=`cat /proc/sys/kernel/osrelease`;
+echo "$CHECK_VER" > /data/.siyah/check_ver;
+sed -i "s/-Siyah*//g" /data/.siyah/check_ver;
+CHANGE_VER=`cat /data/.siyah/check_ver`;
+echo "$CHANGE_VER" > /proc/sys/kernel/osrelease;
+rm /data/.siyah/check_ver;
 
 # reset config-backup-restore
 if [ -f /data/.siyah/restore_running ]; then
 	rm -f /data/.siyah/restore_running;
 fi;
 
-#ccxmlsum=`md5sum /res/customconfig/customconfig.xml | awk '{print $1}'`
-#if [ "a$ccxmlsum" != "a`cat /data/.siyah/.ccxmlsum`" ]; then
-#	rm -f /data/.siyah/*.profile;
-#	echo "$ccxmlsum" > /data/.siyah/.ccxmlsum;
-#fi;
+# reset profiles auto trigger to be used by kernel ADMIN, in case of need, if new value added in default profiles
+# just set numer $RESET_MAGIC + 1 and profiles will be reset one time on next boot with new kernel.
+RESET_MAGIC=4;
+if [ ! -e /data/.siyah/reset_profiles ]; then
+	echo "0" > /data/.siyah/reset_profiles;
+fi;
+if [ `cat /data/.siyah/reset_profiles` -eq "$RESET_MAGIC" ]; then
+	echo "no need to reset profiles";
+else
+	rm -f /data/.siyah/*.profile;
+	echo "$RESET_MAGIC" > /data/.siyah/reset_profiles;
+fi;
 
 [ ! -f /data/.siyah/default.profile ] && cp -a /res/customconfig/default.profile /data/.siyah/default.profile;
 [ ! -f /data/.siyah/battery.profile ] && cp -a /res/customconfig/battery.profile /data/.siyah/battery.profile;
@@ -60,98 +96,103 @@ read_config;
 # custom boot booster stage 1
 echo "$boot_boost" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq;
 
+(
+	# Apps and ROOT Install
+	$BB sh /sbin/ext/install.sh;
+	if [ -e /system/app/SuperSU.apk ] && [ -e /system/xbin/daemonsu ]; then
+		/sbin/ext/root-run.sh;
+	fi;
+
+	# EFS Backup
+	$BB sh /sbin/ext/efs-backup.sh;
+)&
+
 # mdnie sharpness tweak
 if [ "$mdniemod" == "on" ]; then
 	$BB sh /sbin/ext/mdnie-sharpness-tweak.sh;
 fi;
 
-# check cpu voltage group and report to tmp file, and set defaults for STweaks
-dmesg | grep VDD_INT | cut -c 19-50 > /tmp/cpu-voltage_group;
-chmod 777 /tmp/cpu-voltage_group;
+(
+	# check cpu voltage group and report to tmp file, and set defaults for STweaks
+	sleep 5;
+	ROOT_RW;
+	dmesg | grep VDD_INT | cut -c 19-50 > /tmp/cpu-voltage_group;
+	$BB chmod 777 /tmp/cpu-voltage_group;
 
-VDD_INT=`cat /tmp/cpu-voltage_group | cut -c 24`;
+	VDD_INT=`cat /tmp/cpu-voltage_group | cut -c 24`;
 
-if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ]; then
-	if [ "$VDD_INT" -eq "1" ]; then
-		$BB sh /res/uci.sh cpu-voltage 1 1475;
-		$BB sh /res/uci.sh cpu-voltage 2 1450;
-		$BB sh /res/uci.sh cpu-voltage 3 1400;
-		$BB sh /res/uci.sh cpu-voltage 4 1375;
-		$BB sh /res/uci.sh cpu-voltage 5 1350;
-		$BB sh /res/uci.sh cpu-voltage 6 1300;
-		$BB sh /res/uci.sh cpu-voltage 7 1250;
-		$BB sh /res/uci.sh cpu-voltage 8 1175;
-		$BB sh /res/uci.sh cpu-voltage 9 1150;
-		$BB sh /res/uci.sh cpu-voltage 10 1100;
-		$BB sh /res/uci.sh cpu-voltage 11 1075;
-		$BB sh /res/uci.sh cpu-voltage 12 1050;
-		$BB sh /res/uci.sh cpu-voltage 13 1250;
-		$BB sh /res/uci.sh cpu-voltage 14 1250;
-		$BB sh /res/uci.sh cpu-voltage 15 1000;
-		$BB sh /res/uci.sh cpu-voltage 16 1000;
-	elif [ "$VDD_INT" -eq "2" ]; then
-		$BB sh /res/uci.sh cpu-voltage 1 1450;
-		$BB sh /res/uci.sh cpu-voltage 2 1400;
-		$BB sh /res/uci.sh cpu-voltage 3 1350;
-		$BB sh /res/uci.sh cpu-voltage 4 1325;
-		$BB sh /res/uci.sh cpu-voltage 5 1300;
-		$BB sh /res/uci.sh cpu-voltage 6 1250;
-		$BB sh /res/uci.sh cpu-voltage 7 1200;
-		$BB sh /res/uci.sh cpu-voltage 8 1150;
-		$BB sh /res/uci.sh cpu-voltage 9 1100;
-		$BB sh /res/uci.sh cpu-voltage 10 1050;
-		$BB sh /res/uci.sh cpu-voltage 11 1025;
-		$BB sh /res/uci.sh cpu-voltage 12 1000;
-		$BB sh /res/uci.sh cpu-voltage 13 1000;
-		$BB sh /res/uci.sh cpu-voltage 14 1000;
-		$BB sh /res/uci.sh cpu-voltage 15 975;
-		$BB sh /res/uci.sh cpu-voltage 16 975;
-	elif [ "$VDD_INT" -eq "4" ]; then
-		$BB sh /res/uci.sh cpu-voltage 1 1400;
-		$BB sh /res/uci.sh cpu-voltage 2 1350;
-		$BB sh /res/uci.sh cpu-voltage 3 1300;
-		$BB sh /res/uci.sh cpu-voltage 4 1275;
-		$BB sh /res/uci.sh cpu-voltage 5 1250;
-		$BB sh /res/uci.sh cpu-voltage 6 1200;
-		$BB sh /res/uci.sh cpu-voltage 7 1150;
-		$BB sh /res/uci.sh cpu-voltage 8 1100;
-		$BB sh /res/uci.sh cpu-voltage 9 1050;
-		$BB sh /res/uci.sh cpu-voltage 10 1000;
-		$BB sh /res/uci.sh cpu-voltage 11 1000;
-		$BB sh /res/uci.sh cpu-voltage 12 975;
-		$BB sh /res/uci.sh cpu-voltage 13 975;
-		$BB sh /res/uci.sh cpu-voltage 14 975;
-		$BB sh /res/uci.sh cpu-voltage 15 950;
-		$BB sh /res/uci.sh cpu-voltage 16 950;
-	elif [ "$VDD_INT" -eq "5" ]; then
-		$BB sh /res/uci.sh cpu-voltage 1 1375;
-		$BB sh /res/uci.sh cpu-voltage 2 1325;
-		$BB sh /res/uci.sh cpu-voltage 3 1275;
-		$BB sh /res/uci.sh cpu-voltage 4 1250;
-		$BB sh /res/uci.sh cpu-voltage 5 1225;
-		$BB sh /res/uci.sh cpu-voltage 6 1175;
-		$BB sh /res/uci.sh cpu-voltage 7 1125;
-		$BB sh /res/uci.sh cpu-voltage 8 1075;
-		$BB sh /res/uci.sh cpu-voltage 9 1025;
-		$BB sh /res/uci.sh cpu-voltage 10 975;
-		$BB sh /res/uci.sh cpu-voltage 11 975;
-		$BB sh /res/uci.sh cpu-voltage 12 950;
-		$BB sh /res/uci.sh cpu-voltage 13 950;
-		$BB sh /res/uci.sh cpu-voltage 14 950;
-		$BB sh /res/uci.sh cpu-voltage 15 925;
-		$BB sh /res/uci.sh cpu-voltage 16 925;
+	if [ "$cpu_voltage_switch" == "off" ] && [ "$VDD_INT" != "3" ]; then
+		if [ "$VDD_INT" -eq "1" ]; then
+			$BB sh /res/uci.sh cpu-voltage 1 1450;
+			$BB sh /res/uci.sh cpu-voltage 2 1425;
+			$BB sh /res/uci.sh cpu-voltage 3 1375;
+			$BB sh /res/uci.sh cpu-voltage 4 1350;
+			$BB sh /res/uci.sh cpu-voltage 5 1325;
+			$BB sh /res/uci.sh cpu-voltage 6 1275;
+			$BB sh /res/uci.sh cpu-voltage 7 1200;
+			$BB sh /res/uci.sh cpu-voltage 8 1150;
+			$BB sh /res/uci.sh cpu-voltage 9 1125;
+			$BB sh /res/uci.sh cpu-voltage 10 1075;
+			$BB sh /res/uci.sh cpu-voltage 11 1050;
+			$BB sh /res/uci.sh cpu-voltage 12 1025;
+			$BB sh /res/uci.sh cpu-voltage 13 1000;
+			$BB sh /res/uci.sh cpu-voltage 14 1000;
+			$BB sh /res/uci.sh cpu-voltage 15 975;
+			$BB sh /res/uci.sh cpu-voltage 16 975;
+		elif [ "$VDD_INT" -eq "2" ]; then
+			$BB sh /res/uci.sh cpu-voltage 1 1450;
+			$BB sh /res/uci.sh cpu-voltage 2 1400;
+			$BB sh /res/uci.sh cpu-voltage 3 1350;
+			$BB sh /res/uci.sh cpu-voltage 4 1325;
+			$BB sh /res/uci.sh cpu-voltage 5 1300;
+			$BB sh /res/uci.sh cpu-voltage 6 1250;
+			$BB sh /res/uci.sh cpu-voltage 7 1200;
+			$BB sh /res/uci.sh cpu-voltage 8 1150;
+			$BB sh /res/uci.sh cpu-voltage 9 1100;
+			$BB sh /res/uci.sh cpu-voltage 10 1050;
+			$BB sh /res/uci.sh cpu-voltage 11 1025;
+			$BB sh /res/uci.sh cpu-voltage 12 1000;
+			$BB sh /res/uci.sh cpu-voltage 13 1000;
+			$BB sh /res/uci.sh cpu-voltage 14 1000;
+			$BB sh /res/uci.sh cpu-voltage 15 975;
+			$BB sh /res/uci.sh cpu-voltage 16 975;
+		elif [ "$VDD_INT" -eq "4" ]; then
+			$BB sh /res/uci.sh cpu-voltage 1 1400;
+			$BB sh /res/uci.sh cpu-voltage 2 1350;
+			$BB sh /res/uci.sh cpu-voltage 3 1300;
+			$BB sh /res/uci.sh cpu-voltage 4 1275;
+			$BB sh /res/uci.sh cpu-voltage 5 1250;
+			$BB sh /res/uci.sh cpu-voltage 6 1200;
+			$BB sh /res/uci.sh cpu-voltage 7 1150;
+			$BB sh /res/uci.sh cpu-voltage 8 1100;
+			$BB sh /res/uci.sh cpu-voltage 9 1050;
+			$BB sh /res/uci.sh cpu-voltage 10 1000;
+			$BB sh /res/uci.sh cpu-voltage 11 1000;
+			$BB sh /res/uci.sh cpu-voltage 12 975;
+			$BB sh /res/uci.sh cpu-voltage 13 975;
+			$BB sh /res/uci.sh cpu-voltage 14 975;
+			$BB sh /res/uci.sh cpu-voltage 15 950;
+			$BB sh /res/uci.sh cpu-voltage 16 950;
+		elif [ "$VDD_INT" -eq "5" ]; then
+			$BB sh /res/uci.sh cpu-voltage 1 1375;
+			$BB sh /res/uci.sh cpu-voltage 2 1325;
+			$BB sh /res/uci.sh cpu-voltage 3 1275;
+			$BB sh /res/uci.sh cpu-voltage 4 1250;
+			$BB sh /res/uci.sh cpu-voltage 5 1225;
+			$BB sh /res/uci.sh cpu-voltage 6 1175;
+			$BB sh /res/uci.sh cpu-voltage 7 1125;
+			$BB sh /res/uci.sh cpu-voltage 8 1075;
+			$BB sh /res/uci.sh cpu-voltage 9 1025;
+			$BB sh /res/uci.sh cpu-voltage 10 975;
+			$BB sh /res/uci.sh cpu-voltage 11 975;
+			$BB sh /res/uci.sh cpu-voltage 12 950;
+			$BB sh /res/uci.sh cpu-voltage 13 950;
+			$BB sh /res/uci.sh cpu-voltage 14 950;
+			$BB sh /res/uci.sh cpu-voltage 15 925;
+			$BB sh /res/uci.sh cpu-voltage 16 925;
+		fi;
 	fi;
-fi;
-
-# STweaks check su only at /system/xbin/su make it so
-if [ -e /system/xbin/su ]; then
-	echo "root for STweaks found";
-elif [ -e /system/bin/su ]; then
-	cp /system/bin/su /system/xbin/su;
-	chmod 6755 /system/xbin/su;
-else
-	echo "ROM without ROOT";
-fi;
+)&
 
 # busybox addons
 if [ -e /system/xbin/busybox ]; then
@@ -242,14 +283,7 @@ mount -t tmpfs -o mode=0777,gid=1000 tmpfs /mnt/ntfs
 
 $BB sh /sbin/ext/properties.sh;
 
-(
-	# Apps Install
-	$BB sh /sbin/ext/install.sh;
-
-	# EFS Backup
-	$BB sh /sbin/ext/efs-backup.sh;
-)&
-
+ROOT_RW;
 echo "0" > /tmp/uci_done;
 chmod 666 /tmp/uci_done;
 
@@ -289,14 +323,6 @@ chmod 666 /tmp/uci_done;
 		else
 			echo "no sec data image found! abort."
 		fi;
-	elif [ `cat /tmp/sec_rom_boot` -eq "1" ]; then
-		mount -o remount,rw /
-		mkdir /data_pri_rom;
-		mkdir /system_pri_rom;
-		chmod 777 /data_pri_rom;
-		chmod 777 /system_pri_rom;
-		mount -t ext4 /dev/block/mmcblk0p10 /data_pri_rom;
-		mount -t ext4 /dev/block/mmcblk0p9 /system_pri_rom;
 	fi;
 
 	# restore normal freq
@@ -317,7 +343,7 @@ chmod 666 /tmp/uci_done;
 	DM_COUNT=`ls -d /sys/block/dm* | wc -l`;
 	if [ "$DM_COUNT" -gt "0" ]; then
 		for d in $($BB mount | grep dm | cut -d " " -f1 | grep -v vold); do
-			$BB mount -o remount,ro,noauto_da_alloc,discard $d;
+			$BB mount -o remount,ro,noauto_da_alloc $d;
 		done;
 
 		DM=`ls -d /sys/block/dm*`;
@@ -347,6 +373,7 @@ chmod 666 /tmp/uci_done;
 	nohup $BB sh /res/uci.sh restore;
 	UCI_PID=`pgrep -f "/res/uci.sh"`;
 	echo "-800" > /proc/$UCI_PID/oom_score_adj;
+	ROOT_RW;
 	echo "1" > /tmp/uci_done;
 
 	# restore all the PUSH Button Actions back to there location

@@ -26,6 +26,11 @@ $BB rm -rf /sd-ext
 $BB mkdir /sd-ext
 $BB chmod -R 777 /sd-ext
 
+$BB rm -rf /storage
+$BB mkdir -p /storage/sdcard0
+$BB mkdir /storage/sdcard1
+$BB chmod -R 777 /storage
+
 $BB rm -rf /etc
 $BB mkdir /etc
 $BB cat /res/etc/recovery.fstab > /etc/recovery.fstab
@@ -54,8 +59,7 @@ $BB mount -t ext4 /mnt/.secondrom/.secondrom/cache.img /secondrom_cache
 $BB mkdir /secondrom_data
 $BB mkdir /secondrom_system
 
-#echo "7" > /sys/vibrator/vibrator_level
-echo "75" > /sys/vibrator/pwm_val
+echo "75" > /sys/class/timed_output/vibrator/pwm_value
 echo 102 > /sys/devices/virtual/sec/sec_key/set_homekey
 
 # Enable Dual Mount in recovery! and fix .android_secure backup and restore.
@@ -77,4 +81,3 @@ else
 	echo 1 > /sbin/recovery-is-running
 	recovery
 fi;
-
